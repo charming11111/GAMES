@@ -30,3 +30,19 @@ Epic Games, Riot Games, Sony, Microsoft or Nintendo.
 The application icon and built-in emulator placeholder poster are drawn by project
 code. They are presentation assets, not official endorsements. Third-party names
 and marks remain the property of their respective owners.
+
+## Build-only compiler / 仅用于构建的编译器
+
+The native entry is compiled with TinyCC 0.9.27, an LGPL-licensed build tool.
+The compiler is downloaded during building and is not included in release assets.
+The pinned upstream ZIP has SHA-256
+`34a721949a2583fdff725312da092fa0f5f1f284b702e6f811c6954714faabb2`.
+The build uses `-nostdlib` and a project-owned entry point, linking only to Windows
+system DLLs rather than TinyCC CRT/runtime objects.
+
+TinyCC 是仅用于构建的 LGPL 编译工具，不随发布程序分发。
+构建脚本校验固定安装包哈希；镜像下载的文件也必须完全匹配同一哈希。
+
+- Upstream: <https://bellard.org/tcc/>
+- Archive: <https://download.savannah.gnu.org/releases/tinycc/tcc-0.9.27-win64-bin.zip>
+- Verified byte-identical mirror: <https://github.com/phoenixthrush/Tiny-C-Compiler/releases/tag/0.9.27-win64>

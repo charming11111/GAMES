@@ -12,10 +12,16 @@ GAMES 使用 C#、WPF 和 .NET Framework 构建，将本地游戏整理成封面
 前往 **[Releases 下载页](https://github.com/charming11111/GAMES/releases/latest)**：
 
 - `GAMES.exe`：单 EXE，下载后直接运行。
-- `GAMES-v1.0.0-windows-x64.zip`：程序、使用说明和许可证的完整压缩包。
+- `GAMES-v1.0.1-windows-x64.zip`：程序、使用说明和许可证的完整压缩包。
 
 运行环境：**Windows 10 / 11 x64，.NET Framework 4.8**。
 程序未进行商业代码签名；请从本仓库的 Release 下载，并核对随版本提供的 SHA-256。
+
+从 v1.0.1 起，EXE 外层为原生 Windows 启动入口。若没有检测到 .NET Framework
+4.8 或更高版本，会先显示中文提示和
+[微软官方下载地址](https://dotnet.microsoft.com/zh-cn/download/dotnet-framework/net48)。
+选择“是”才打开下载页；不会自动下载或安装。安装 **Runtime / 运行时** 后重新打开程序即可。
+已安装 4.8.1 或更高兼容版本时直接进入游戏库。
 
 ## 功能
 
@@ -69,11 +75,17 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\build.ps1 -Test
 
 输出为 `out\GAMES.exe`。构建脚本使用系统 .NET Framework 编译器，
 不需要安装 Visual Studio、Node.js 或额外 NuGet 包。
+首次构建会下载并校验固定版本的 TinyCC，用于编译不依赖 .NET 的小型原生启动入口；
+需要联网，工具缓存于 `.tools`，不随程序分发。
 `-Test` 会运行隔离临时目录中的回归检查，结果写入 `out\test-result.txt`。
 这些检查覆盖程序行为，不代表所有游戏、显示器或手柄都经过实机验证。
 
 仓库中的 `SDL2.dll` 会嵌入 EXE，首次运行时释放到应用数据目录。
 第三方许可证同时嵌入并随发布压缩包提供。
+
+单 EXE 中的托管程序首次运行时会解包到
+`%LOCALAPPDATA%\GameShelf\Runtime\<内容哈希>`，之后校验并复用缓存；
+游戏库仍在同一个系统进程中运行。启动入口只读取运行环境信息，不更改系统的 .NET 安装。
 
 ## 识别边界与数据
 
@@ -98,6 +110,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\build.ps1 -Test
 | `LaunchWatch.cs`、`Tray.cs` | 启动等待与托盘 |
 | `ContinuousScroll.cs`、`Performance.cs` | 滚动与资源复用 |
 | `Tests.cs`、`build.ps1` | 回归检查与构建 |
+| `bootstrap/` | 原生运行环境检测、单 EXE 打包与 CLR 启动桥接 |
 
 欢迎提交 Issue 或 Pull Request。报告识别或封面问题时请提供游戏名称、目录层级和
 候选 EXE 名称，避免附带个人路径、账号信息、Token 或完整游戏文件。

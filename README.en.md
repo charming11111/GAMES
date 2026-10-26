@@ -14,11 +14,18 @@ the application interface currently uses Simplified Chinese.
 Visit **[Releases](https://github.com/charming11111/GAMES/releases/latest)**:
 
 - `GAMES.exe`: a standalone executable.
-- `GAMES-v1.0.0-windows-x64.zip`: the executable, documentation and licenses.
+- `GAMES-v1.0.1-windows-x64.zip`: the executable, documentation and licenses.
 
 Requirements: **Windows 10 / 11 x64 and .NET Framework 4.8**.
 The executable is not commercially code-signed. Download from this repository's
 Releases and compare its SHA-256 with the supplied checksum file.
+
+Starting with v1.0.1, the outer EXE is a native Windows entry point. If .NET Framework
+4.8 or later is missing, it displays a bilingual prompt and the
+[official Microsoft download URL](https://dotnet.microsoft.com/en-us/download/dotnet-framework/net48).
+The browser opens only after confirmation. Nothing is downloaded or installed
+automatically. Install the **Runtime**, then reopen GAMES. Compatible newer versions,
+including 4.8.1, are accepted.
 
 ## Features
 
@@ -79,11 +86,19 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\build.ps1 -Test
 
 The output is `out\GAMES.exe`. The script uses the system .NET Framework compiler;
 Visual Studio, Node.js and additional NuGet packages are not required.
+The first build downloads and verifies a pinned TinyCC package for the small native
+entry point. Internet access is required; the compiler is cached in `.tools` and
+is not shipped with the application.
 `-Test` runs regression checks in an isolated temporary directory and writes
 `out\test-result.txt`. These checks do not certify every game, display or controller.
 
 The bundled `SDL2.dll` is embedded in the executable and extracted to the application
 data directory on first use. Its license is embedded and included in the ZIP release.
+
+The embedded managed application is extracted to
+`%LOCALAPPDATA%\GameShelf\Runtime\<content hash>` and verified before reuse.
+It runs in the same OS process. Framework detection is read-only and does not alter
+the system's .NET installation.
 
 ## Limitations and local data
 
@@ -113,6 +128,7 @@ data directory on first use. Its license is embedded and included in the ZIP rel
 | `LaunchWatch.cs`, `Tray.cs` | Launch detection and tray integration |
 | `ContinuousScroll.cs`, `Performance.cs` | Scrolling and resource reuse |
 | `Tests.cs`, `build.ps1` | Regression checks and build |
+| `bootstrap/` | Native prerequisite checks, single-file packaging and CLR bridge |
 
 Issues and pull requests are welcome. For detection problems, share game names,
 directory structure and candidate EXE names. Do not publish private paths, account

@@ -1,5 +1,6 @@
 # Build outputs and generated diagnostics
 out/
+.tools/
 dist/
 bin/
 obj/
