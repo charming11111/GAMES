@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Windows;
 using System.Windows.Threading;
 partial class Shelf {
@@ -6,6 +6,7 @@ partial class Shelf {
  [System.Runtime.InteropServices.DllImport("user32.dll",CharSet=System.Runtime.InteropServices.CharSet.Unicode)]static extern uint RegisterWindowMessage(string name);
  [System.Runtime.InteropServices.DllImport("user32.dll")]static extern bool PostMessage(IntPtr h,uint message,IntPtr w,IntPtr l);
  static uint restoreMessage=RegisterWindowMessage("GAMES.GameShelf.Restore.v1");
+ static uint coverDiagnosticsMessage=RegisterWindowMessage("GAMES.GameShelf.CoverState.v1");
  static bool AcquireInstance(){bool created;instanceMutex=new System.Threading.Mutex(true,@"Local\GAMES.GameShelf.Instance",out created);ownsInstance=created;if(created)return true;PostMessage((IntPtr)0xffff,restoreMessage,IntPtr.Zero,IntPtr.Zero);instanceMutex.Dispose();instanceMutex=null;return false;}
  static void ReleaseInstance(){if(instanceMutex==null)return;if(ownsInstance){instanceMutex.ReleaseMutex();ownsInstance=false;}instanceMutex.Dispose();instanceMutex=null;}
  void BringBack(){if(inTray)RestoreFromTray();else {Show();if(WindowState==WindowState.Minimized)WindowState=WindowState.Normal;Activate();main.Focus();}}

@@ -1,5 +1,11 @@
 # 更新日志 / Changelog
 
+## v1.0.2
+
+- 修正刺客信条、龙之信条等带英文所有格名称的封面匹配。
+- 窗口重新激活时恢复已有缓存但未显示的封面，不重新扫描游戏目录。
+- Fixed possessive-name cover matching and recovery of cached images on window activation.
+
 ## v1.0.1
 
 - 增加不依赖 .NET 的原生启动入口。未安装 .NET Framework 4.8+ 时，先提示并提供微软官方下载地址。
