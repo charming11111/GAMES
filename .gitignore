@@ -1,0 +1,47 @@
+# Build outputs and generated diagnostics
+out/
+dist/
+bin/
+obj/
+*.pdb
+*.bak
+*.tmp
+*-preview.png
+settings-*.png
+*-result.json
+*-audit.json
+*-verification*.json
+cover-repair.json
+motion-profile*.json
+test-result.txt
+
+# Personal data and local development history
+.local-development/
+AGENTS.md
+settings.json
+settings.*.json
+startup-diagnostic.json
+library-runtime.json
+covers/
+cover-sources/
+recording-review/
+*.mp4
+*.lnk
+*.url
+*.log
+*.zip
+*.exe
+!SDL2.dll
+
+# Editors and credentials
+.vs/
+.vscode/
+.env
+.env.*
+*.pem
+*.key
+*.pfx
+*.p12
+*.token
+Thumbs.db
+desktop.ini
