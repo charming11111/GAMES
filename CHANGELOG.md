@@ -1,5 +1,11 @@
 # 更新日志 / Changelog
 
+## v1.0.9
+
+- 顶部手柄导航与单行布局一致，左右可连续经过全部图标，上下直接往返游戏列表。
+- 手柄轮询使用输入优先级，减少焦点重置和整排按钮重绘，缩短长按首次重复等待。
+- Align controller navigation with the single header row and prioritize input polling while reducing focus churn and icon repainting.
+
 ## v1.0.8
 
 - 全屏长菜单优先使用约 92% 的窗口高度，通过行高和间距撑开。
