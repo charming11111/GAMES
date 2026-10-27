@@ -1,5 +1,11 @@
 # 更新日志 / Changelog
 
+## v1.0.4
+
+- 缓存目录时间戳和启动文件列表，未变化目录不重复枚举文件；新增、删除和子目录变化按需更新。
+- F5 / 手动扫描保留完整核对，启动时仍先显示上次游戏库。
+- Cache directory inventories for incremental startup checks; keep full verification available through manual scan.
+
 ## v1.0.3
 
 - 启动时先恢复本地游戏库和封面，再后台扫描并更新变化。
