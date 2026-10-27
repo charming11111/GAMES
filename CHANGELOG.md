@@ -1,5 +1,11 @@
 # 更新日志 / Changelog
 
+## v1.0.5
+
+- 菜单根据窗口可用尺寸调整间距并等比例适配，所有选项完整显示，无需菜单滚动条。
+- 覆盖设置、游戏操作及其他弹层；支持打开菜单后动态调整窗口大小。
+- Responsive menus compact spacing and fit the available window without internal scrolling.
+
 ## v1.0.4
 
 - 缓存目录时间戳和启动文件列表，未变化目录不重复枚举文件；新增、删除和子目录变化按需更新。
