@@ -1,5 +1,11 @@
 # 更新日志 / Changelog
 
+## v1.0.11
+
+- 右上角增加关闭图标，与设置中的退出操作共同打开退出确认，默认选中取消。
+- 支持 PS L2 + R2 / Xbox LT + RT 打开退出确认；按住不重复弹窗，保留前台和松键保护。
+- Add a top-right close icon and a trigger-chord exit confirmation with cancel selected by default.
+
 ## v1.0.10
 
 - 将 SDL 设备读取移出界面线程，独立采样并合并待处理状态，避免读取阻塞菜单响应。
