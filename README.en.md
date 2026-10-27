@@ -14,13 +14,13 @@ the application interface currently uses Simplified Chinese.
 Visit **[Releases](https://github.com/charming11111/GAMES/releases/latest)**:
 
 - `GAMES.exe`: a standalone executable.
-- `GAMES-v1.0.6-windows-x64.zip`: the executable, documentation and licenses.
+- `GAMES-v1.0.7-windows-x64.zip`: the executable, documentation and licenses.
 
 Requirements: **Windows 10 / 11 x64 and .NET Framework 4.8**.
 The executable is not commercially code-signed. Download from this repository's
 Releases and compare its SHA-256 with the supplied checksum file.
 
-Starting with v1.0.6, the outer EXE is a native Windows entry point. If .NET Framework
+Starting with v1.0.7, the outer EXE is a native Windows entry point. If .NET Framework
 4.8 or later is missing, it displays a bilingual prompt and the
 [official Microsoft download URL](https://dotnet.microsoft.com/en-us/download/dotnet-framework/net48).
 The browser opens only after confirmation. Nothing is downloaded or installed

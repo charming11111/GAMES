@@ -12,12 +12,12 @@ GAMES 使用 C#、WPF 和 .NET Framework 构建，将本地游戏整理成封面
 前往 **[Releases 下载页](https://github.com/charming11111/GAMES/releases/latest)**：
 
 - `GAMES.exe`：单 EXE，下载后直接运行。
-- `GAMES-v1.0.6-windows-x64.zip`：程序、使用说明和许可证的完整压缩包。
+- `GAMES-v1.0.7-windows-x64.zip`：程序、使用说明和许可证的完整压缩包。
 
 运行环境：**Windows 10 / 11 x64，.NET Framework 4.8**。
 程序未进行商业代码签名；请从本仓库的 Release 下载，并核对随版本提供的 SHA-256。
 
-从 v1.0.6 起，EXE 外层为原生 Windows 启动入口。若没有检测到 .NET Framework
+从 v1.0.7 起，EXE 外层为原生 Windows 启动入口。若没有检测到 .NET Framework
 4.8 或更高版本，会先显示中文提示和
 [微软官方下载地址](https://dotnet.microsoft.com/zh-cn/download/dotnet-framework/net48)。
 选择“是”才打开下载页；不会自动下载或安装。安装 **Runtime / 运行时** 后重新打开程序即可。

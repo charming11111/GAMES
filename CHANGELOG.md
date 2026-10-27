@@ -1,5 +1,11 @@
 # 更新日志 / Changelog
 
+## v1.0.7
+
+- 增加菜单常规行高；随窗口高度逐步收紧间距，避免直接跳到最小布局。
+- 优先利用可用高度，尽量保持文字和按钮尺寸；保留首次显示前完成布局。
+- Use taller menu rows and continuously fit spacing to available height instead of switching to an overly compact layout.
+
 ## v1.0.6
 
 - 修复菜单先大后小的跳变：内容构建和尺寸计算完成后才淡入显示。
