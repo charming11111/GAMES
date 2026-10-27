@@ -1,5 +1,11 @@
 # 更新日志 / Changelog
 
+## v1.0.3
+
+- 启动时先恢复本地游戏库和封面，再后台扫描并更新变化。
+- 缓存原子保存并保留备份，目录暂不可用时保留已缓存游戏。
+- Restore the cached library before background discovery; save snapshots atomically with backup recovery.
+
 ## v1.0.2
 
 - 修正刺客信条、龙之信条等带英文所有格名称的封面匹配。
