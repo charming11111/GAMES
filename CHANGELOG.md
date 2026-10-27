@@ -1,5 +1,11 @@
 # 更新日志 / Changelog
 
+## v1.0.8
+
+- 全屏长菜单优先使用约 92% 的窗口高度，通过行高和间距撑开。
+- 菜单标题与选项字号放大并加粗，说明文字适度放大。
+- Taller fullscreen menus with larger, heavier option text and readable descriptions.
+
 ## v1.0.7
 
 - 增加菜单常规行高；随窗口高度逐步收紧间距，避免直接跳到最小布局。
