@@ -1,5 +1,11 @@
 # 更新日志 / Changelog
 
+## v1.0.6
+
+- 修复菜单先大后小的跳变：内容构建和尺寸计算完成后才淡入显示。
+- 菜单选项切换不再重复触发布局缩放。
+- Fit the completed menu before revealing it; keep selection changes independent of sizing.
+
 ## v1.0.5
 
 - 菜单根据窗口可用尺寸调整间距并等比例适配，所有选项完整显示，无需菜单滚动条。
