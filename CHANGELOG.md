@@ -1,5 +1,12 @@
 # 更新日志 / Changelog
 
+## v1.0.10
+
+- 将 SDL 设备读取移出界面线程，独立采样并合并待处理状态，避免读取阻塞菜单响应。
+- 使用手柄状态更新接口，关闭未消费的 SDL 事件队列；丢弃过期状态，保留前台和松键保护。
+- 增加按下、长按重复、松开再按及过期状态检查；提供可选本地手柄耗时诊断。
+- Move SDL polling off the UI thread, coalesce snapshots, discard stale input and preserve foreground/release guards.
+
 ## v1.0.9
 
 - 顶部手柄导航与单行布局一致，左右可连续经过全部图标，上下直接往返游戏列表。
