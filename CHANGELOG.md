@@ -1,5 +1,19 @@
 # 更新日志 / Changelog
 
+## v1.0.12
+
+- 退出按钮改为电源图标，继续使用退出确认。
+- 修复盘根目录放有 GAMES.exe 时，多个游戏被错误合并、漏扫的问题。
+- 多目录设置和底部状态同步，不再显示遗留的默认 E 盘。
+- 全屏卡片尺寸按实际像素对齐，修复部分分辨率与缩放组合下少一列、右侧留白的问题。
+- 补充黑暗之魂3、暗黑血统3、暗影火炬城、地平线4、禁闭求生2、极品飞车18、仁王2、巫师3的封面名称及商店编号匹配。
+- 名称纠正后立即重试缺失封面，避免等待旧的失败重试间隔。
+
+- Replaced the close glyph with a power icon while preserving exit confirmation.
+- Fixed merged/missing games when scanning a drive containing the launcher, and synchronized the displayed scan directories.
+- Aligned fullscreen card widths to physical pixels to preserve nine columns across resolutions and DPI scales.
+- Improved title/App ID matching for eight games and retry missing artwork when a title is corrected.
+
 ## v1.0.11
 
 - 右上角增加关闭图标，与设置中的退出操作共同打开退出确认，默认选中取消。
