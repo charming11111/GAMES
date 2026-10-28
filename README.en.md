@@ -27,6 +27,21 @@ The browser opens only after confirmation. Nothing is downloaded or installed
 automatically. Install the **Runtime**, then reopen GAMES. Compatible newer versions,
 including 4.8.1, are accepted.
 
+## Screenshots
+
+These screenshots use a demo library and sample artwork to show the interface. No games are included.
+
+![Dark library with PlayStation controller hints](docs/images/library-dark.png)
+
+<details>
+<summary>View the light theme and settings</summary>
+
+![Light library](docs/images/library-light.png)
+
+![Responsive settings menu](docs/images/settings.png)
+
+</details>
+
 ## Features
 
 - Multiple scan locations; scan at startup or manually with **F5** / the scan button.

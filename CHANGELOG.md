@@ -2,6 +2,9 @@
 
 ## v1.0.12
 
+- 中英文说明新增深色、浅色及设置菜单演示截图。
+- Added dark/light library and settings screenshots to both documentation versions.
+
 - 退出按钮改为电源图标，继续使用退出确认。
 - 修复盘根目录放有 GAMES.exe 时，多个游戏被错误合并、漏扫的问题。
 - 多目录设置和底部状态同步，不再显示遗留的默认 E 盘。

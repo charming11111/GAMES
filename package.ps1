@@ -6,6 +6,7 @@ New-Item -ItemType Directory -Path $dist -Force | Out-Null
 Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'out\GAMES.exe') -Destination (Join-Path $dist 'GAMES.exe') -Force
 $files = @(@('GAMES.exe') | ForEach-Object { Join-Path $dist $_ })
 $files += @('README.md','README.en.md','LICENSE','SDL-LICENSE.txt','SDL-NOTICE.txt','THIRD-PARTY-NOTICES.md') | ForEach-Object { Join-Path $PSScriptRoot $_ }
+$files += Join-Path $PSScriptRoot 'docs'
 $zip = Join-Path $dist "GAMES-v$Version-windows-x64.zip"
 Compress-Archive -LiteralPath $files -DestinationPath $zip -Force
 $hashes = @('GAMES.exe', "GAMES-v$Version-windows-x64.zip") | ForEach-Object {

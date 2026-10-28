@@ -23,6 +23,21 @@ GAMES 使用 C#、WPF 和 .NET Framework 构建，将本地游戏整理成封面
 选择“是”才打开下载页；不会自动下载或安装。安装 **Runtime / 运行时** 后重新打开程序即可。
 已安装 4.8.1 或更高兼容版本时直接进入游戏库。
 
+## 界面预览
+
+以下截图使用演示游戏库与示例封面，仅展示启动器界面；程序不附带游戏。
+
+![深色主题游戏库与 PlayStation 手柄提示](docs/images/library-dark.png)
+
+<details>
+<summary>查看浅色主题与设置菜单</summary>
+
+![浅色主题游戏库](docs/images/library-light.png)
+
+![自适应设置菜单](docs/images/settings.png)
+
+</details>
+
 ## 功能
 
 - 多目录扫描：选择游戏目录或磁盘，启动时扫描；点击顶部扫描按钮或按 **F5** 手动更新。
