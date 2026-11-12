@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
@@ -20,7 +20,9 @@ class SmoothScrollViewer:ScrollViewer {
  public bool WheelRunning{get{return running&&wheel;}}public double WheelTarget{get{return motion.Target;}}public double TargetOffset{get{return running?motion.Target:VerticalOffset;}}public double DisplayOffset{get{return running?motion.Position:VerticalOffset;}}public double MotionVelocity{get{return motion.Velocity;}}
  public SmoothScrollViewer(){Unloaded+=(o,e)=>StopMotion(false);}
  void SetTarget(double offset,bool fromWheel){offset=Math.Max(0,Math.Min(ScrollableHeight,offset));if(!running&&Math.Abs(offset-VerticalOffset)<.1)return;motion.DurationHint=fromWheel?.20:.30;if(!running){motion.Position=VerticalOffset;motion.Velocity=0;motion.Target=offset;lastTick=Stopwatch.GetTimestamp();running=true;wheel=fromWheel;var clock=new DoubleAnimation(0,1,TimeSpan.FromSeconds(1)){RepeatBehavior=RepeatBehavior.Forever};Timeline.SetDesiredFrameRate(clock,DiagnosticRate>0?DiagnosticRate:AnimationLimit);BeginAnimation(MotionClockProperty,clock);}else{motion.Target=offset;wheel=fromWheel;}}
- void AdvanceMotion(){if(!running)return;long now=Stopwatch.GetTimestamp();double dt=(double)(now-lastTick)/Stopwatch.Frequency;lastTick=now;motion.Advance(dt);ScrollToVerticalOffset(motion.Position);if(motion.Settled){ScrollToVerticalOffset(motion.Target);StopMotion(false);}}
+ void AdvanceMotion(){if(!running)return;long now=Stopwatch.GetTimestamp();double dt=(double)(now-lastTick)/Stopwatch.Frequency;lastTick=now;
+  // Keep a delayed render callback from jumping the viewport forward in one frame.
+  motion.Advance(Math.Min(dt,1.0/60));ScrollToVerticalOffset(motion.Position);if(motion.Settled){ScrollToVerticalOffset(motion.Target);StopMotion(false);}}
  void StopMotion(bool keepVisual){if(!running)return;double position=motion.Position;running=false;wheel=false;BeginAnimation(MotionClockProperty,null);motion.Velocity=0;if(keepVisual){ScrollToVerticalOffset(position);UpdateLayout();}}
  protected override void OnPreviewMouseDown(MouseButtonEventArgs e){StopMotion(true);base.OnPreviewMouseDown(e);}
  protected override void OnPreviewMouseWheel(MouseWheelEventArgs e){if(ScrollableHeight>0&&SystemParameters.WheelScrollLines!=0){WheelBy(e.Delta);e.Handled=true;return;}base.OnPreviewMouseWheel(e);}
