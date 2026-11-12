@@ -64,26 +64,41 @@ partial class Shelf {
  }art.Children.Add(g.Image);art.Children.Add(new Border{Height=68,VerticalAlignment=VerticalAlignment.Bottom,Background=new LinearGradientBrush(Colors.Transparent,Color.FromArgb(130,0,0,0),90)});
   if(State(g).Favorite)art.Children.Add(new Border{Child=Glyph("heart",13),Background=B("#C8322848"),Padding=new Thickness(7),CornerRadius=new CornerRadius(9),VerticalAlignment=VerticalAlignment.Top,HorizontalAlignment=HorizontalAlignment.Right,Margin=new Thickness(9)});g.FocusMark=new Border{Child=Glyph("menu",15),Background=B(Accent),Width=29,Height=29,CornerRadius=new CornerRadius(15),HorizontalAlignment=HorizontalAlignment.Right,VerticalAlignment=VerticalAlignment.Bottom,Margin=new Thickness(10),Opacity=0};art.Children.Add(g.FocusMark);g.SelectionBadge=new Border{Child=Txt("◈  SELECTED",9,B(Mint)),Background=B("#D5132135"),BorderBrush=B("#8871E3CB"),BorderThickness=new Thickness(1),CornerRadius=new CornerRadius(6),Padding=new Thickness(8,5,8,5),HorizontalAlignment=HorizontalAlignment.Left,VerticalAlignment=VerticalAlignment.Top,Margin=new Thickness(9),Visibility=Visibility.Collapsed};art.Children.Add(g.SelectionBadge);art.SizeChanged+=(o,e)=>art.Clip=new RectangleGeometry(new Rect(0,0,art.ActualWidth,art.ActualHeight),11,11);content.Children.Add(art);
   var caption=new StackPanel{Margin=new Thickness(12,9,12,6)};var label=Label(g.Name,13,"Fg");g.NameLabel=label;label.FontWeight=FontWeights.SemiBold;label.TextTrimming=TextTrimming.CharacterEllipsis;caption.Children.Add(label);string sub=State(g).LastPlayed>0?"上次游玩 "+new DateTime(State(g).LastPlayed).ToLocalTime().ToString("MM.dd"):"准备就绪";if(State(g).Hidden)sub="已移除 · 可在菜单恢复";caption.Children.Add(Label(sub,10,"Muted"));Grid.SetRow(caption,1);content.Children.Add(caption);var clipped=Box(content,"Surface",13);var outer=new Border{Child=clipped,CornerRadius=new CornerRadius(17),BorderThickness=new Thickness(4),Padding=new Thickness(3),Margin=new Thickness(5,5,13,19),Cursor=Cursors.Hand,RenderTransformOrigin=new Point(.5,.5),ToolTip=g.Name+(g.Name!=g.OriginalName?"\n"+g.OriginalName:"")+"\n确认以打开游戏菜单"};var transform=new TransformGroup();g.Scale=new ScaleTransform();g.Lift=new TranslateTransform();transform.Children.Add(g.Scale);transform.Children.Add(g.Lift);var host=new Grid{RenderTransform=transform,RenderTransformOrigin=new Point(.5,.5)};g.Halo=new Border{BorderThickness=new Thickness(4),CornerRadius=new CornerRadius(17),Margin=outer.Margin,IsHitTestVisible=false,Opacity=0};host.Children.Add(g.Halo);host.Children.Add(outer);g.Card=outer;outer.MouseEnter+=(o,e)=>{if(modal==""&&!launching&&!controllerNavigation){PointerGame(g);}};outer.MouseMove+=(o,e)=>{if(modal==""&&!launching&&!controllerNavigation)PointerGame(g);};outer.MouseLeftButtonUp+=(o,e)=>{if(modal==""){PointerGame(g);OpenGame(g);e.Handled=true;}};outer.MouseRightButtonUp+=(o,e)=>{OpenGame(g);e.Handled=true;};g.Host=host;g.CardKey=key;tiles.Children.Add(host);}
- void ShowLaunch(Game g){var layer=new Grid();layer.Children.Add(new Border{Background=new LinearGradientBrush(Color.FromArgb(240,11,16,32),Color.FromArgb(197,27,25,56),50)});var center=new StackPanel{VerticalAlignment=VerticalAlignment.Center,HorizontalAlignment=HorizontalAlignment.Center};var orbit=new Grid{Width=118,Height=118,Margin=new Thickness(0,0,0,28)};var ring=new Ellipse{Stroke=B(Mint),StrokeThickness=3,StrokeDashArray=new DoubleCollection{26,12,8,12},RenderTransformOrigin=new Point(.5,.5)};var rotation=new RotateTransform();ring.RenderTransform=rotation;Animate(rotation,RotateTransform.AngleProperty,new DoubleAnimation(0,360,TimeSpan.FromMilliseconds(1100)){RepeatBehavior=RepeatBehavior.Forever});orbit.Children.Add(ring);var logo=Logo(66);logo.HorizontalAlignment=HorizontalAlignment.Center;logo.VerticalAlignment=VerticalAlignment.Center;orbit.Children.Add(logo);center.Children.Add(orbit);
-  var poster=new Image{
-   Source=g.Image==null?null:g.Image.Source,
-   Width=Math.Min(ActualWidth*.42,480),Height=Math.Min(ActualHeight*.53,570),
-   Stretch=Stretch.Uniform,Margin=new Thickness(0,0,0,24),
-   Visibility=Visibility.Collapsed
+ void ShowLaunch(Game g){
+  var layer=new Grid{ClipToBounds=true};
+  var backdrop=new Image{Source=g.Image==null?null:g.Image.Source,Stretch=Stretch.UniformToFill,Opacity=.74,IsHitTestVisible=false};
+  RenderOptions.SetBitmapScalingMode(backdrop,BitmapScalingMode.HighQuality);
+  var blurredBackdrop=new Image{
+   Source=backdrop.Source,Stretch=Stretch.UniformToFill,Opacity=.74,
+   Effect=new BlurEffect{Radius=32,RenderingBias=RenderingBias.Performance},
+   IsHitTestVisible=false
   };
-  if(poster.Source!=null){poster.Visibility=Visibility.Visible;orbit.Visibility=Visibility.Collapsed;}
-  center.Children.Add(poster);
-  var name=Txt(g.Name,30,Brushes.White);name.FontWeight=FontWeights.Bold;name.TextAlignment=TextAlignment.Center;name.MaxWidth=700;name.TextWrapping=TextWrapping.Wrap;center.Children.Add(name);var sub=Txt("正 在 启 动",12,B(Mint));sub.HorizontalAlignment=HorizontalAlignment.Center;sub.Margin=new Thickness(0,18,0,0);center.Children.Add(sub);Animate(sub,OpacityProperty,new DoubleAnimation(.35,1,TimeSpan.FromMilliseconds(500)){AutoReverse=true,RepeatBehavior=RepeatBehavior.Forever});var cancel=IconButton("back","停止等待 · Esc / B / ○（不关闭游戏）",()=>launchWaitCancelled=true);cancel.HorizontalAlignment=HorizontalAlignment.Right;cancel.VerticalAlignment=VerticalAlignment.Top;cancel.Margin=new Thickness(24);layer.Children.Add(cancel);layer.Children.Add(center);launchLayer=new Border{Child=layer,Background=B("#F50B1020")};Panel.SetZIndex(launchLayer,100);canvas.Children.Add(launchLayer);
+  layer.Children.Add(blurredBackdrop);
+  var focusMask=new RadialGradientBrush{RadiusX=.55,RadiusY=.62};
+  focusMask.GradientStops.Add(new GradientStop(Colors.White,0));
+  focusMask.GradientStops.Add(new GradientStop(Colors.White,.48));
+  focusMask.GradientStops.Add(new GradientStop(Colors.Transparent,1));
+  focusMask.Freeze();
+  backdrop.OpacityMask=focusMask;
+  layer.Children.Add(backdrop);
+  var shade=new RadialGradientBrush{Center=new Point(.5,.46),GradientOrigin=new Point(.5,.46),RadiusX=.72,RadiusY=.78};
+  shade.GradientStops.Add(new GradientStop(Color.FromArgb(172,8,12,26),0));
+  shade.GradientStops.Add(new GradientStop(Color.FromArgb(232,10,14,31),1));
+  shade.Freeze();
+  layer.Children.Add(new Border{Background=shade});
+  var center=new StackPanel{VerticalAlignment=VerticalAlignment.Center,HorizontalAlignment=HorizontalAlignment.Center};var orbit=new Grid{Width=118,Height=118,Margin=new Thickness(0,0,0,28)};var ring=new Ellipse{Stroke=B(Mint),StrokeThickness=3,StrokeDashArray=new DoubleCollection{26,12,8,12},RenderTransformOrigin=new Point(.5,.5)};var rotation=new RotateTransform();ring.RenderTransform=rotation;Animate(rotation,RotateTransform.AngleProperty,new DoubleAnimation(0,360,TimeSpan.FromMilliseconds(1100)){RepeatBehavior=RepeatBehavior.Forever});orbit.Children.Add(ring);var logo=Logo(66);logo.HorizontalAlignment=HorizontalAlignment.Center;logo.VerticalAlignment=VerticalAlignment.Center;orbit.Children.Add(logo);center.Children.Add(orbit);
+  var name=Txt(g.Name,30,Brushes.White);name.FontWeight=FontWeights.Bold;name.TextAlignment=TextAlignment.Center;name.MaxWidth=700;name.TextWrapping=TextWrapping.Wrap;center.Children.Add(name);var sub=Txt("正 在 启 动",12,B(Mint));sub.HorizontalAlignment=HorizontalAlignment.Center;sub.Margin=new Thickness(0,18,0,0);center.Children.Add(sub);Animate(sub,OpacityProperty,new DoubleAnimation(.35,1,TimeSpan.FromMilliseconds(500)){AutoReverse=true,RepeatBehavior=RepeatBehavior.Forever});var cancel=IconButton("back","停止等待 · Esc / B / ○（不关闭游戏）",()=>launchWaitCancelled=true);cancel.HorizontalAlignment=HorizontalAlignment.Right;cancel.VerticalAlignment=VerticalAlignment.Top;cancel.Margin=new Thickness(24);layer.Children.Add(center);
+  layer.Children.Add(cancel);
+  launchLayer=new Border{Child=layer,Background=B("#F50B1020")};Panel.SetZIndex(launchLayer,100);canvas.Children.Add(launchLayer);
   Animate(launchLayer,OpacityProperty,new DoubleAnimation(0,1,TimeSpan.FromMilliseconds(240)){FillBehavior=FillBehavior.Stop});
-  if(HasCover(g.Cover))LoadLaunchPoster(g.Cover,launchLayer,poster,orbit);
+  if(HasCover(g.Cover))LoadLaunchPoster(g.Cover,launchLayer,backdrop,blurredBackdrop);
  }
- async void LoadLaunchPoster(string path,Border owner,Image poster,Grid fallback){
+ async void LoadLaunchPoster(string path,Border owner,Image backdrop,Image blurredBackdrop){
   try{
-   var bitmap=await System.Threading.Tasks.Task.Run(()=>DecodeBitmap(path,640));
+   var bitmap=await System.Threading.Tasks.Task.Run(()=>DecodeBitmap(path,800));
    if(closing||launchLayer!=owner)return;
-   poster.Source=bitmap;
-   poster.Visibility=Visibility.Visible;
-   fallback.Visibility=Visibility.Collapsed;
+   backdrop.Source=bitmap;
+   blurredBackdrop.Source=bitmap;
   }catch(System.IO.IOException){}catch(UnauthorizedAccessException){}catch(NotSupportedException){}catch(System.Runtime.InteropServices.COMException){}
  }
 }
