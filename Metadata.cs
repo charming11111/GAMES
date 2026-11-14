@@ -12,7 +12,18 @@ partial class Shelf {
  static string Norm(string s){s=s.ToLowerInvariant().Replace("’","'").Normalize(NormalizationForm.FormD);return Regex.Replace(s,@"[^\p{L}\p{N}]","");}
  static Dictionary<string,string> chinese=new Dictionary<string,string>(StringComparer.OrdinalIgnoreCase){
  {"Launch Cult of the Lamb","咩咩启示录"},{"Rise of the Tomb Raider: 20 Year Celebration","古墓丽影：崛起"},{"Tomb Raider GAME OF THE YEAR EDITION","古墓丽影：年度版"},
- {"Cyberpunk 2077 Phantom Liberty","赛博朋克2077：往日之影"},{"Crashlands2","崩溃大陆2"},{"GTA5","侠盗猎车手5"},{"Garden Story","花园故事"},{"Warhammer 40,000 Space Marine 2","战锤40,000：星际战士2"}};
+ {"Cyberpunk 2077 Phantom Liberty","赛博朋克2077：往日之影"},{"Crashlands2","崩溃大陆2"},{"GTA5","侠盗猎车手5"},{"Garden Story","花园故事"},{"Warhammer 40,000 Space Marine 2","战锤40,000：星际战士2"},
+ {"Artifact SeekerLegend of Aurorium","神器行者：奥罗瑞恩传奇"},
+ {"Castlevania Belmonts Curse","恶魔城：贝尔蒙特的诅咒"},
+ {"Cat Quest II","猫咪斗恶龙2"},
+ {"Contra Operation Galuga","魂斗罗：加鲁加行动"},
+ {"DOOMBLADE","毁灭之刃"},
+ {"LEGO® Star Wars™: The Skywalker Saga","乐高星球大战：天行者传奇"},
+ {"MovingOut","胡闹搬家"},
+ {"Overcooked2","胡闹厨房2"},
+ {"Riverbond","河畔之乡"},
+ {"Turnip Boy Robs a Bank","大头菜小子银行历险记"},
+ {"Viewfinder","取景器"}};
  static Dictionary<string,string> knownIds=new Dictionary<string,string>(StringComparer.OrdinalIgnoreCase){
  {"黑暗之魂3","374320"},{"暗黑血统3","606280"},{"暗影火炬城","1330470"},{"极限竞速：地平线4","1293830"},{"禁闭求生2","2661300"},{"极品飞车18：宿敌","1262600"},{"仁王2：完全版","1325200"},{"巫师3：狂猎","292030"},
  {"刺客信条：幻景","3035570"},{"刺客信条：起源","582160"},{"龙之信条2","2054970"},{"《赤痕·：夜之仪式》","692850"},{"Launch Cult of the Lamb","1313140"},{"Rise of the Tomb Raider: 20 Year Celebration","391220"},{"Tomb Raider GAME OF THE YEAR EDITION","203160"},
@@ -33,7 +44,7 @@ partial class Shelf {
    File.WriteAllText(idFile,app);
    Dictionary<string,object> details=null;var modernUrls=new List<string>();
    try{string input="{\"ids\":[{\"appid\":"+app+"}],\"context\":{\"language\":\"schinese\",\"country_code\":\"US\"},\"data_request\":{\"include_assets\":true}}";var result=json.DeserializeObject(w.DownloadString("https://api.steampowered.com/IStoreBrowseService/GetItems/v1/?input_json="+Uri.EscapeDataString(input))) as Dictionary<string,object>;var response=result["response"] as Dictionary<string,object>;var items=response["store_items"] as object[];
-    if(items!=null&&items.Length>0){var item=items[0] as Dictionary<string,object>;if(item.ContainsKey("name"))details=item;if(item.ContainsKey("assets")){var assets=item["assets"] as Dictionary<string,object>;if(assets!=null&&assets.ContainsKey("asset_url_format"))foreach(var key in new[]{"library_capsule","library_capsule_2x","hero_capsule","header"})if(assets.ContainsKey(key)&&!string.IsNullOrEmpty(assets[key].ToString()))modernUrls.Add("https://shared.akamai.steamstatic.com/store_item_assets/"+assets["asset_url_format"].ToString().Replace("${FILENAME}",assets[key].ToString()));}}
+    if(items!=null&&items.Length>0){var item=items[0] as Dictionary<string,object>;if(item.ContainsKey("name"))details=item;if(item.ContainsKey("assets")){var assets=item["assets"] as Dictionary<string,object>;if(assets!=null&&assets.ContainsKey("asset_url_format"))foreach(var key in new[]{"library_capsule_2x","library_capsule","hero_capsule","header"})if(assets.ContainsKey(key)&&!string.IsNullOrEmpty(assets[key].ToString()))modernUrls.Add("https://shared.akamai.steamstatic.com/store_item_assets/"+assets["asset_url_format"].ToString().Replace("${FILENAME}",assets[key].ToString()));}}
    }catch{}
    try{if(details==null){var response=json.DeserializeObject(w.DownloadString("https://store.steampowered.com/api/appdetails?appids="+app+"&l=schinese&cc=US")) as Dictionary<string,object>;var item=response[app] as Dictionary<string,object>;if(item.ContainsKey("data"))details=item["data"] as Dictionary<string,object>;}
     File.WriteAllText(g.Cover+".title",details!=null&&details.ContainsKey("name")?details["name"].ToString():g.OriginalName);

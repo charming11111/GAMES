@@ -1,4 +1,4 @@
-﻿using System.Windows.Media.Imaging;
+using System.Windows.Media.Imaging;
 using System;
 using System.IO;
 using System.Collections.Generic;
@@ -11,8 +11,11 @@ using System.Windows.Media.Animation;
 using System.Windows.Input;
 using System.Diagnostics;
 partial class Shelf {
- class BitmapEntry {public string Key;public BitmapImage Bitmap;}
+ class BitmapEntry {public string Key;public BitmapImage Bitmap;public long Bytes;}
  static Dictionary<string,LinkedListNode<BitmapEntry>> bitmaps=new Dictionary<string,LinkedListNode<BitmapEntry>>();static LinkedList<BitmapEntry> bitmapOrder=new LinkedList<BitmapEntry>();
+ const long CoverCacheBudget=24L*1024*1024;
+ static long coverCacheBytes;
+ static void ClearBitmapCache(){bitmaps.Clear();bitmapOrder.Clear();coverCacheBytes=0;}
  static string BitmapKey(string path,int width){
   var file=new FileInfo(path);
   return path+"|"+file.LastWriteTimeUtc.Ticks+"|"+file.Length+"|"+width;
@@ -39,11 +42,15 @@ partial class Shelf {
  }
  static void CacheBitmap(string key,BitmapImage bitmap){
   if(FindBitmap(key)!=null)return;
-  bitmaps[key]=bitmapOrder.AddLast(new BitmapEntry{Key=key,Bitmap=bitmap});
-  while(bitmaps.Count>8){
+  long bytes=(long)bitmap.PixelWidth*bitmap.PixelHeight*4;
+  if(bytes>CoverCacheBudget)return;
+  bitmaps[key]=bitmapOrder.AddLast(new BitmapEntry{Key=key,Bitmap=bitmap,Bytes=bytes});
+  coverCacheBytes+=bytes;
+  while(coverCacheBytes>CoverCacheBudget||bitmaps.Count>32){
    var oldest=bitmapOrder.First;
    bitmapOrder.RemoveFirst();
    bitmaps.Remove(oldest.Value.Key);
+   coverCacheBytes-=oldest.Value.Bytes;
   }
  }
  static BitmapImage ReadBitmap(string path,int width){
@@ -54,6 +61,7 @@ partial class Shelf {
   CacheBitmap(key,bitmap);
   return bitmap;
  }
+ readonly Dictionary<string,BitmapEntry> retainedCovers=new Dictionary<string,BitmapEntry>(StringComparer.OrdinalIgnoreCase);
  bool coverDecodeRunning;
  async void DecodeViewportCover(Game game,string key,int width){
   coverDecodeRunning=true;
@@ -61,10 +69,11 @@ partial class Shelf {
   string path=game.Cover;
   try{
    var bitmap=await System.Threading.Tasks.Task.Run(()=>DecodeBitmap(path,width));
-   if(closing||!IsVisible||!viewportCovers.Contains(game)||game.Image!=image)return;
+   if(closing||!IsVisible)return;
    if(!File.Exists(path)||BitmapKey(path,width)!=key)return;
-   CacheBitmap(key,bitmap);
-   SetViewportCover(game,bitmap);
+   if(!games.Contains(game))return;
+   retainedCovers[path]=new BitmapEntry{Key=key,Bitmap=bitmap};
+   if(game.Image==image)SetViewportCover(game,bitmap);
   }catch(Exception ex){
    if(File.Exists(path)&&BitmapKey(path,width)==key)ReportCoverError(game,ex);
   }finally{
@@ -105,17 +114,21 @@ partial class Shelf {
   GetCoverRange(out first,out last);
   coverFirst=first;
   coverLast=last;
-  var nearby=new HashSet<Game>();
-  for(int i=first;i<last;i++)nearby.Add(visible[i]);
-  foreach(var g in viewportCovers)if(!nearby.Contains(g)){
-   g.Image.Source=null;
-   if(g.BackdropImage!=null)g.BackdropImage.Source=null;
-   g.CoverPlaceholder.Visibility=Visibility.Visible;
-  }
   viewportCovers.Clear();
-  viewportCovers.UnionWith(nearby);
-  if(!IsVisible){bitmaps.Clear();bitmapOrder.Clear();return;}
-  for(int i=first;i<last;i++){
+  for(int i=first;i<last;i++)viewportCovers.Add(visible[i]);
+  if(!IsVisible){ClearBitmapCache();return;}
+  if(coverDecodeRunning)return;
+  if(retainedCovers.Count>0){
+   var libraryPaths=new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+   foreach(var game in games)libraryPaths.Add(game.Cover);
+   var removed=new List<string>();
+   foreach(var path in retainedCovers.Keys)if(!libraryPaths.Contains(path))removed.Add(path);
+   foreach(var path in removed)retainedCovers.Remove(path);
+  }
+  int count=testMode?last-first:visible.Count;
+  for(int slot=0;slot<count;slot++){
+   int i=slot+first;
+   if(i>=visible.Count)i-=visible.Count;
    var game=visible[i];
    if(game.Image.Source!=null||!HasCover(game.Cover))continue;
    if(testMode&&!profileMode){
@@ -125,13 +138,17 @@ partial class Shelf {
    int width=CoverDecodeWidth(game);
    try{
     string key=BitmapKey(game.Cover,width);
-    var bitmap=FindBitmap(key);
-    if(bitmap!=null)SetViewportCover(game,bitmap);
-    else if(!coverDecodeRunning)DecodeViewportCover(game,key,width);
+    BitmapEntry retained;
+    if(retainedCovers.TryGetValue(game.Cover,out retained)&&retained.Key==key){
+     SetViewportCover(game,retained.Bitmap);
+    }else{
+     DecodeViewportCover(game,key,width);
+     return;
+    }
    }catch(Exception ex){ReportCoverError(game,ex);}
   }
  }
- string CardFingerprint(Game g){var state=State(g);long stamp=File.Exists(g.Cover)?File.GetLastWriteTimeUtc(g.Cover).Ticks:0;return g.Name+"|"+stamp+"|"+state.Favorite+"|"+state.Hidden+"|"+state.LastPlayed+"|"+fullscreen+"|"+dark;}
+ string CardFingerprint(Game g){var state=State(g);long stamp=File.Exists(g.Cover)?File.GetLastWriteTimeUtc(g.Cover).Ticks:0;return g.Name+"|"+stamp+"|"+state.Favorite+"|"+state.Hidden+"|"+state.LastPlayed+"|"+state.PlayCount+"|"+state.PlayTicks+"|"+PlayStatus(g)+"|"+fullscreen+"|"+dark;}
  void RevealSelected(){if(selected<0||selected>=visible.Count)return;double top=(selected/Math.Max(1,columns))*tiles.ItemHeight+10,height=visible[selected].Card.Height;double bottom=top+height+12,view=scroll.ViewportHeight;if(double.IsNaN(top)||view<=0)return;double target=scroll.TargetOffset;if(top<target+8)target=top-12;else if(bottom>target+view-8)target=bottom-view+12;if(!testMode)scroll.MoveTo(target);else scroll.ScrollToVerticalOffset(target);}
  int? animationRate=SmoothScrollViewer.AnimationLimit;string focusStyleKey="";
  void SyncRefreshRate(){}

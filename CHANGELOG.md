@@ -1,5 +1,25 @@
 # 更新日志 / Changelog
 
+## v1.0.16
+
+## 中文
+
+- 新增累计游玩时长。通过 GAMES 启动并识别到游戏进程后，按进程运行时间累计，切到后台也继续计时。游戏仍在运行时重启 GAMES 可接续记录。
+- 新增 NEW、启动中和游玩中角标。封面左下角依次显示游玩时长、上次游玩日期和游戏名。长标题支持按副标题分隔符换行。
+- 界面采用楷体和灰阶抗锯齿，游戏名加粗。补充 11 款游戏的中文显示名。
+- 封面按宫格尺寸在后台解码，加载完成后保留，往返滚动时可直接复用。大型游戏库会占用更多内存。
+
+Windows x64 提供单文件 EXE、含中英文说明和许可证的 ZIP，以及 SHA-256 校验文件。
+
+## English
+
+- Track cumulative playtime for games launched through GAMES. Time follows the detected game process, including time in the background. Tracking can resume if GAMES restarts while the game is still running.
+- Added NEW, launching and playing badges. Cover cards show playtime, last played date and title in that order. Long titles can wrap at subtitle separators.
+- Updated typography with KaiTi and grayscale antialiasing, bold game titles, and Chinese display names for 11 more games.
+- Covers decode in the background at grid size and remain in memory for reuse while scrolling. Larger libraries use more memory.
+
+Windows x64 downloads include a standalone EXE, a ZIP with bilingual documentation and licenses, and SHA-256 checksums.
+
 ## v1.0.12
 
 - 中英文说明新增深色、浅色及设置菜单演示截图。

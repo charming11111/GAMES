@@ -14,7 +14,7 @@ the application interface currently uses Simplified Chinese.
 Visit **[Releases](https://github.com/charming11111/GAMES/releases/latest)**:
 
 - `GAMES.exe`: a standalone executable.
-- `GAMES-v1.0.15-windows-x64.zip`: the executable, documentation and licenses.
+- `GAMES-v1.0.16-windows-x64.zip`: the executable, documentation and licenses.
 
 Requirements: **Windows 10 / 11 x64 and .NET Framework 4.8**.
 The executable is not commercially code-signed. Download from this repository's

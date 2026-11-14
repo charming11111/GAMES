@@ -57,41 +57,278 @@ partial class Shelf {
   scroll.WheelStarted+=(o,e)=>LockPointer();scroll.Content=tiles;scroll.VerticalScrollBarVisibility=ScrollBarVisibility.Auto;scroll.HorizontalScrollBarVisibility=ScrollBarVisibility.Disabled;scroll.Padding=new Thickness(8,16,8,16);scroll.PanningMode=PanningMode.VerticalOnly;Grid.SetRow(scroll,3);main.Children.Add(scroll);scroll.SizeChanged+=(o,e)=>UpdateTileSizes();
   var footer=new Grid{Margin=new Thickness(0,14,0,0)};footer.ColumnDefinitions.Add(new ColumnDefinition());footer.ColumnDefinitions.Add(new ColumnDefinition{Width=GridLength.Auto});var info=new StackPanel();selectedName=Label("",12,"Fg");selectedName.TextTrimming=TextTrimming.CharacterEllipsis;info.Children.Add(selectedName);status=Label("自动同步已开启",10,"Muted");status.Margin=new Thickness(0,4,0,0);status.TextTrimming=TextTrimming.CharacterEllipsis;info.Children.Add(status);footer.Children.Add(info);hintBar.HorizontalAlignment=HorizontalAlignment.Right;hintBar.VerticalAlignment=VerticalAlignment.Center;Grid.SetColumn(hintBar,1);footer.Children.Add(hintBar);Grid.SetRow(footer,4);main.Children.Add(footer);DrawHints();
   overlay.Visibility=Visibility.Collapsed;overlay.Background=B("#B5080B14");Panel.SetZIndex(overlay,50);canvas.Children.Add(overlay);overlay.MouseLeftButtonDown+=(o,e)=>{if(e.OriginalSource==overlay&&!launching)CloseModal();};}
- void BuildCard(Game g){string key=CardFingerprint(g);if(g.Host!=null&&g.CardKey==key){tiles.Children.Add(g.Host);return;}var content=new Grid();content.RowDefinitions.Add(new RowDefinition());content.RowDefinitions.Add(new RowDefinition{Height=new GridLength(62)});var art=new Grid{ClipToBounds=true,Background=new LinearGradientBrush((Color)ColorConverter.ConvertFromString("#333153"),(Color)ColorConverter.ConvertFromString("#192638"),45)};var place=new StackPanel{VerticalAlignment=VerticalAlignment.Center,HorizontalAlignment=HorizontalAlignment.Center};place.Children.Add(Glyph("pad",46));var name=Txt(g.Name,13,B("#A9AFCA"));name.TextWrapping=TextWrapping.Wrap;name.TextAlignment=TextAlignment.Center;name.MaxWidth=140;name.Margin=new Thickness(10,18,10,0);place.Children.Add(name);art.Children.Add(place);g.Image=new Image{Stretch=Stretch.UniformToFill};g.CoverPlaceholder=place;g.BackdropImage=null;
+ void BuildCard(Game g){string key=CardFingerprint(g);if(g.Host!=null&&g.CardKey==key){tiles.Children.Add(g.Host);return;}var art=new Grid{ClipToBounds=true,Background=new LinearGradientBrush((Color)ColorConverter.ConvertFromString("#333153"),(Color)ColorConverter.ConvertFromString("#192638"),45)};var place=new StackPanel{VerticalAlignment=VerticalAlignment.Center,HorizontalAlignment=HorizontalAlignment.Center};place.Children.Add(Glyph("pad",46));var name=Txt(g.Name,13,B("#A9AFCA"));name.TextWrapping=TextWrapping.Wrap;name.TextAlignment=TextAlignment.Center;name.MaxWidth=140;name.Margin=new Thickness(10,18,10,0);place.Children.Add(name);art.Children.Add(place);g.Image=new Image{Stretch=Stretch.UniformToFill};g.CoverPlaceholder=place;g.BackdropImage=null;
  if(File.Exists(g.Cover+".fit")){
   g.BackdropImage=new Image{Stretch=Stretch.UniformToFill,Opacity=.28,Effect=new BlurEffect{Radius=18}};
   art.Children.Insert(0,g.BackdropImage);
- }art.Children.Add(g.Image);art.Children.Add(new Border{Height=68,VerticalAlignment=VerticalAlignment.Bottom,Background=new LinearGradientBrush(Colors.Transparent,Color.FromArgb(130,0,0,0),90)});
-  if(State(g).Favorite)art.Children.Add(new Border{Child=Glyph("heart",13),Background=B("#C8322848"),Padding=new Thickness(7),CornerRadius=new CornerRadius(9),VerticalAlignment=VerticalAlignment.Top,HorizontalAlignment=HorizontalAlignment.Right,Margin=new Thickness(9)});g.FocusMark=new Border{Child=Glyph("menu",15),Background=B(Accent),Width=29,Height=29,CornerRadius=new CornerRadius(15),HorizontalAlignment=HorizontalAlignment.Right,VerticalAlignment=VerticalAlignment.Bottom,Margin=new Thickness(10),Opacity=0};art.Children.Add(g.FocusMark);g.SelectionBadge=new Border{Child=Txt("◈  SELECTED",9,B(Mint)),Background=B("#D5132135"),BorderBrush=B("#8871E3CB"),BorderThickness=new Thickness(1),CornerRadius=new CornerRadius(6),Padding=new Thickness(8,5,8,5),HorizontalAlignment=HorizontalAlignment.Left,VerticalAlignment=VerticalAlignment.Top,Margin=new Thickness(9),Visibility=Visibility.Collapsed};art.Children.Add(g.SelectionBadge);art.SizeChanged+=(o,e)=>art.Clip=new RectangleGeometry(new Rect(0,0,art.ActualWidth,art.ActualHeight),11,11);content.Children.Add(art);
-  var caption=new StackPanel{Margin=new Thickness(12,9,12,6)};var label=Label(g.Name,13,"Fg");g.NameLabel=label;label.FontWeight=FontWeights.SemiBold;label.TextTrimming=TextTrimming.CharacterEllipsis;caption.Children.Add(label);string sub=State(g).LastPlayed>0?"上次游玩 "+new DateTime(State(g).LastPlayed).ToLocalTime().ToString("MM.dd"):"准备就绪";if(State(g).Hidden)sub="已移除 · 可在菜单恢复";caption.Children.Add(Label(sub,10,"Muted"));Grid.SetRow(caption,1);content.Children.Add(caption);var clipped=Box(content,"Surface",13);var outer=new Border{Child=clipped,CornerRadius=new CornerRadius(17),BorderThickness=new Thickness(4),Padding=new Thickness(3),Margin=new Thickness(5,5,13,19),Cursor=Cursors.Hand,RenderTransformOrigin=new Point(.5,.5),ToolTip=g.Name+(g.Name!=g.OriginalName?"\n"+g.OriginalName:"")+"\n确认以打开游戏菜单"};var transform=new TransformGroup();g.Scale=new ScaleTransform();g.Lift=new TranslateTransform();transform.Children.Add(g.Scale);transform.Children.Add(g.Lift);var host=new Grid{RenderTransform=transform,RenderTransformOrigin=new Point(.5,.5)};g.Halo=new Border{BorderThickness=new Thickness(4),CornerRadius=new CornerRadius(17),Margin=outer.Margin,IsHitTestVisible=false,Opacity=0};host.Children.Add(g.Halo);host.Children.Add(outer);g.Card=outer;outer.MouseEnter+=(o,e)=>{if(modal==""&&!launching&&!controllerNavigation){PointerGame(g);}};outer.MouseMove+=(o,e)=>{if(modal==""&&!launching&&!controllerNavigation)PointerGame(g);};outer.MouseLeftButtonUp+=(o,e)=>{if(modal==""){PointerGame(g);OpenGame(g);e.Handled=true;}};outer.MouseRightButtonUp+=(o,e)=>{OpenGame(g);e.Handled=true;};g.Host=host;g.CardKey=key;tiles.Children.Add(host);}
+ }art.Children.Add(g.Image);art.Children.Add(new Border{Height=100,VerticalAlignment=VerticalAlignment.Bottom,Background=new LinearGradientBrush(Colors.Transparent,Color.FromArgb(130,0,0,0),90)});
+  var state=State(g);
+  bool isNew=state.LastPlayed==0&&state.PlayCount==0&&!state.Hidden;
+  var badges=new StackPanel{VerticalAlignment=VerticalAlignment.Top,HorizontalAlignment=HorizontalAlignment.Right,Margin=new Thickness(8),IsHitTestVisible=false};
+  string playStatus=PlayStatus(g);
+  var playStatusBadge=playStatus==null?null:PlayStatusBadge(playStatus,state.Hidden?66:80);
+  if(playStatusBadge!=null)art.Children.Add(playStatusBadge);
+  if(isNew)badges.Children.Add(NewGameBadge());
+  if(state.Favorite)badges.Children.Add(new Border{Child=Glyph("heart",13),Background=B("#C8322848"),Padding=new Thickness(6),CornerRadius=new CornerRadius(8),HorizontalAlignment=HorizontalAlignment.Right,Margin=new Thickness(0,isNew?4:0,0,0)});
+  art.Children.Add(badges);g.FocusMark=new Border{Child=Glyph("menu",15),Background=B(Accent),Width=29,Height=29,CornerRadius=new CornerRadius(15),HorizontalAlignment=HorizontalAlignment.Right,VerticalAlignment=VerticalAlignment.Bottom,Margin=new Thickness(0,0,10,state.Hidden?68:82),Opacity=0};art.Children.Add(g.FocusMark);g.SelectionBadge=new Border{Child=Txt("◈  SELECTED",9,B(Mint)),Background=B("#D5132135"),BorderBrush=B("#8871E3CB"),BorderThickness=new Thickness(1),CornerRadius=new CornerRadius(6),Padding=new Thickness(8,5,8,5),HorizontalAlignment=HorizontalAlignment.Left,VerticalAlignment=VerticalAlignment.Top,Margin=new Thickness(9),Visibility=Visibility.Collapsed};art.Children.Add(g.SelectionBadge);art.SizeChanged+=(o,e)=>art.Clip=new RectangleGeometry(new Rect(0,0,art.ActualWidth,art.ActualHeight),11,11);
+  var caption=new StackPanel{Margin=new Thickness(0,0,7,0),VerticalAlignment=VerticalAlignment.Bottom,IsHitTestVisible=false};
+  var label=Label(g.Name,16,"Fg");
+  g.NameLabel=label;
+  label.FontWeight=FontWeights.Bold;
+  label.TextAlignment=TextAlignment.Left;
+  label.TextWrapping=TextWrapping.Wrap;
+  label.Foreground=B("#F1F5F8");
+
+  if(state.Hidden){
+   var removed=CardMeta("已移除 · 可恢复",dark?"#B4BED4":"#515D73",dark?"#253048":"#EEF1F7");
+   removed.HorizontalAlignment=HorizontalAlignment.Left;
+   caption.Children.Add(removed);
+  }else{
+   string last=state.LastPlayed>0?new DateTime(state.LastPlayed,DateTimeKind.Utc).ToLocalTime().ToString("yyyy/MM/dd",System.Globalization.CultureInfo.InvariantCulture):"—";
+   var duration=HistoryBadge("游玩时长",PlayDuration(state.PlayTicks),"#A2F4D5","#D9154039",HorizontalAlignment.Left);
+   caption.Children.Add(duration);
+   var date=HistoryBadge("上次游玩",last,"#C1DAFF","#D91B3155",HorizontalAlignment.Left);
+   caption.Children.Add(date);
+  }
+  caption.Children.Add(new Border{
+   Child=label,MinHeight=33,HorizontalAlignment=HorizontalAlignment.Left,Padding=new Thickness(10,3,10,3),CornerRadius=new CornerRadius(6),
+   Background=new LinearGradientBrush(Color.FromArgb(225,82,61,47),Color.FromArgb(235,43,32,28),90)
+  });
+  art.Children.Add(caption);
+  art.SizeChanged+=(o,e)=>{
+   double width=Math.Max(1,art.ActualWidth-27);
+   var font=new Typeface(label.FontFamily,label.FontStyle,label.FontWeight,label.FontStretch);
+   string title=WrapCardTitle(g.Name,width,line=>new FormattedText(line,
+    System.Globalization.CultureInfo.CurrentCulture,label.FlowDirection,font,label.FontSize,
+    Brushes.White,VisualTreeHelper.GetDpi(label).PixelsPerDip).Width);
+   if(label.Text!=title)label.Text=title;
+  };
+  caption.SizeChanged+=(o,e)=>{
+   g.FocusMark.Margin=new Thickness(0,0,10,caption.ActualHeight+8);
+   if(playStatusBadge!=null)playStatusBadge.Margin=new Thickness(5,0,0,caption.ActualHeight+5);
+  };
+  var clipped=Box(art,"Surface",13);var outer=new Border{Child=clipped,CornerRadius=new CornerRadius(17),BorderThickness=new Thickness(4),Padding=new Thickness(3),Margin=new Thickness(5,5,13,19),Cursor=Cursors.Hand,RenderTransformOrigin=new Point(.5,.5),ToolTip=g.Name+(g.Name!=g.OriginalName?"\n"+g.OriginalName:"")+"\n确认以打开游戏菜单"};var transform=new TransformGroup();g.Scale=new ScaleTransform();g.Lift=new TranslateTransform();transform.Children.Add(g.Scale);transform.Children.Add(g.Lift);var host=new Grid{RenderTransform=transform,RenderTransformOrigin=new Point(.5,.5)};g.Halo=new Border{BorderThickness=new Thickness(4),CornerRadius=new CornerRadius(17),Margin=outer.Margin,IsHitTestVisible=false,Opacity=0};host.Children.Add(g.Halo);host.Children.Add(outer);g.Card=outer;outer.MouseEnter+=(o,e)=>{if(modal==""&&!launching&&!controllerNavigation){PointerGame(g);}};outer.MouseMove+=(o,e)=>{if(modal==""&&!launching&&!controllerNavigation)PointerGame(g);};outer.MouseLeftButtonUp+=(o,e)=>{if(modal==""){PointerGame(g);OpenGame(g);e.Handled=true;}};outer.MouseRightButtonUp+=(o,e)=>{OpenGame(g);e.Handled=true;};g.Host=host;g.CardKey=key;tiles.Children.Add(host);}
+ static string WrapCardTitle(string title,double width,Func<string,double> measure){
+  if(measure(title)<=width)return title;
+  // Try subtitle separators first, then keep edition names and parentheticals together.
+  foreach(string pattern in new[]{
+   @"[：:]\s*|[–—－]\s*|(?<=[\u3400-\u9FFF])-(?=[\u3400-\u9FFF])|\s+-\s+|[·・]\s*",
+   @"(?=[（(【])|(?=重制版$|豪华版$|终极版$|完全版$|增强版$|年度版$|导演剪辑版$)",
+   @"\s+"
+  }){
+   string best=null;
+   double imbalance=double.PositiveInfinity;
+   foreach(System.Text.RegularExpressions.Match match in System.Text.RegularExpressions.Regex.Matches(title,pattern)){
+    int split=match.Index+match.Length;
+    if(split<=0||split>=title.Length)continue;
+    string first=title.Substring(0,split).TrimEnd(),second=title.Substring(split).TrimStart();
+    if(first.Length==0||second.Length==0)continue;
+    double left=measure(first),right=measure(second),difference=Math.Abs(left-right);
+    if(left<=width&&right<=width&&difference<imbalance){
+     best=first+"\n"+second;
+     imbalance=difference;
+    }
+   }
+   if(best!=null)return best;
+  }
+  return title;
+ }
+
+ FrameworkElement HistoryBadge(string title,string value,string ink,string fill,HorizontalAlignment alignment){
+  var labels=new StackPanel();
+  var heading=Txt(title,11,B(ink));
+  heading.TextAlignment=TextAlignment.Left;
+  labels.Children.Add(heading);
+  var amount=Txt(value,12,B("#F5FAFF"));
+  amount.FontFamily=new FontFamily("KaiTi, STKaiti, Microsoft YaHei UI");
+  amount.TextAlignment=heading.TextAlignment;
+  amount.FontWeight=FontWeights.Normal;
+  labels.Children.Add(amount);
+  var fit=new Viewbox{Child=labels,Stretch=Stretch.Uniform,StretchDirection=StretchDirection.DownOnly,HorizontalAlignment=HorizontalAlignment.Left};
+  return new Border{Child=fit,Height=33,HorizontalAlignment=alignment,Background=B(fill),
+   BorderBrush=B(ink),BorderThickness=new Thickness(0,0,0,1),CornerRadius=new CornerRadius(6),Padding=new Thickness(5,2,5,2)};
+ }
+ FrameworkElement PlayStatusBadge(string status,double bottom){
+  bool playing=status=="游玩中";
+  string ink=playing?"#C5FFEA":"#FFE1A8";
+  var badge=new Grid{Width=99,Height=32,HorizontalAlignment=HorizontalAlignment.Left,
+   VerticalAlignment=VerticalAlignment.Bottom,Margin=new Thickness(5,0,0,bottom),IsHitTestVisible=false};
+  var glow=new RadialGradientBrush{RadiusX=.5,RadiusY=.5};
+  glow.GradientStops.Add(new GradientStop((Color)ColorConverter.ConvertFromString(playing?"#FA103934":"#FA49331D"),0));
+  glow.GradientStops.Add(new GradientStop((Color)ColorConverter.ConvertFromString(playing?"#F5154841":"#F5563D23"),.68));
+  glow.GradientStops.Add(new GradientStop((Color)ColorConverter.ConvertFromString(playing?"#00154841":"#00563D23"),1));
+  badge.Background=glow;
+  var row=new StackPanel{Orientation=Orientation.Horizontal,HorizontalAlignment=HorizontalAlignment.Center,
+   VerticalAlignment=VerticalAlignment.Center};
+  var dot=new Ellipse{Width=5,Height=5,Fill=B(playing?"#78FFD2":"#FFD17C"),
+   VerticalAlignment=VerticalAlignment.Center,Margin=new Thickness(0,0,5,0)};
+  row.Children.Add(dot);
+  var icon=(System.Windows.Shapes.Path)Glyph(playing?"pad":"clock",13);
+  icon.Stroke=B(ink);
+  icon.Margin=new Thickness(0,0,4,0);
+  row.Children.Add(icon);
+  var label=Txt(status,13,B(ink));
+  label.FontWeight=FontWeights.Bold;
+  row.Children.Add(label);
+  badge.Children.Add(row);
+  return badge;
+ }
+ Border CardMeta(string text,string color,string fill){
+  var label=Txt(text,10,B(color));
+  label.TextWrapping=TextWrapping.Wrap;
+  return new Border{Child=label,Background=B(fill),CornerRadius=new CornerRadius(6),Padding=new Thickness(6,1,6,1),Margin=new Thickness(0,3,0,0),HorizontalAlignment=HorizontalAlignment.Center};
+ }
+
+ static BitmapSource newGameBadgeArt;
+ FrameworkElement NewGameBadge(){
+  if(newGameBadgeArt==null){
+   using(var stream=typeof(Shelf).Assembly.GetManifestResourceStream("new-game-badge.png")){
+    var bitmap=new BitmapImage();
+    bitmap.BeginInit();
+    bitmap.CacheOption=BitmapCacheOption.OnLoad;
+    bitmap.StreamSource=stream;
+    bitmap.EndInit();
+    bitmap.Freeze();
+    newGameBadgeArt=bitmap;
+   }
+  }
+  var badge=new Image{Source=newGameBadgeArt,Width=70,Height=28,HorizontalAlignment=HorizontalAlignment.Right};
+  RenderOptions.SetBitmapScalingMode(badge,BitmapScalingMode.HighQuality);
+  System.Windows.Automation.AutomationProperties.SetName(badge,"新游戏");
+  return badge;
+ }
  void ShowLaunch(Game g){
   var layer=new Grid{ClipToBounds=true};
-  var backdrop=new Image{Source=g.Image==null?null:g.Image.Source,Stretch=Stretch.UniformToFill,Opacity=.74,IsHitTestVisible=false};
+  var backdrop=new Image{Source=g.Image==null?null:g.Image.Source,Stretch=Stretch.Uniform,HorizontalAlignment=HorizontalAlignment.Center,IsHitTestVisible=false};
   RenderOptions.SetBitmapScalingMode(backdrop,BitmapScalingMode.HighQuality);
   var blurredBackdrop=new Image{
-   Source=backdrop.Source,Stretch=Stretch.UniformToFill,Opacity=.74,
+   Source=backdrop.Source,Stretch=Stretch.UniformToFill,Opacity=.65,
    Effect=new BlurEffect{Radius=32,RenderingBias=RenderingBias.Performance},
    IsHitTestVisible=false
   };
   layer.Children.Add(blurredBackdrop);
-  var focusMask=new RadialGradientBrush{RadiusX=.55,RadiusY=.62};
-  focusMask.GradientStops.Add(new GradientStop(Colors.White,0));
-  focusMask.GradientStops.Add(new GradientStop(Colors.White,.48));
+  var focusMask=new LinearGradientBrush{StartPoint=new Point(0,.5),EndPoint=new Point(1,.5)};
+  focusMask.GradientStops.Add(new GradientStop(Colors.Transparent,0));
+  focusMask.GradientStops.Add(new GradientStop(Color.FromArgb(38,255,255,255),.065));
+  focusMask.GradientStops.Add(new GradientStop(Color.FromArgb(170,255,255,255),.15));
+  focusMask.GradientStops.Add(new GradientStop(Colors.White,.24));
+  focusMask.GradientStops.Add(new GradientStop(Colors.White,.76));
+  focusMask.GradientStops.Add(new GradientStop(Color.FromArgb(170,255,255,255),.85));
+  focusMask.GradientStops.Add(new GradientStop(Color.FromArgb(38,255,255,255),.935));
   focusMask.GradientStops.Add(new GradientStop(Colors.Transparent,1));
   focusMask.Freeze();
   backdrop.OpacityMask=focusMask;
   layer.Children.Add(backdrop);
   var shade=new RadialGradientBrush{Center=new Point(.5,.46),GradientOrigin=new Point(.5,.46),RadiusX=.72,RadiusY=.78};
-  shade.GradientStops.Add(new GradientStop(Color.FromArgb(172,8,12,26),0));
-  shade.GradientStops.Add(new GradientStop(Color.FromArgb(232,10,14,31),1));
+  shade.GradientStops.Add(new GradientStop(Color.FromArgb(96,8,12,26),0));
+  shade.GradientStops.Add(new GradientStop(Color.FromArgb(204,10,14,31),1));
   shade.Freeze();
   layer.Children.Add(new Border{Background=shade});
-  var center=new StackPanel{VerticalAlignment=VerticalAlignment.Center,HorizontalAlignment=HorizontalAlignment.Center};var orbit=new Grid{Width=118,Height=118,Margin=new Thickness(0,0,0,28)};var ring=new Ellipse{Stroke=B(Mint),StrokeThickness=3,StrokeDashArray=new DoubleCollection{26,12,8,12},RenderTransformOrigin=new Point(.5,.5)};var rotation=new RotateTransform();ring.RenderTransform=rotation;Animate(rotation,RotateTransform.AngleProperty,new DoubleAnimation(0,360,TimeSpan.FromMilliseconds(1100)){RepeatBehavior=RepeatBehavior.Forever});orbit.Children.Add(ring);var logo=Logo(66);logo.HorizontalAlignment=HorizontalAlignment.Center;logo.VerticalAlignment=VerticalAlignment.Center;orbit.Children.Add(logo);center.Children.Add(orbit);
+  var center=new StackPanel{VerticalAlignment=VerticalAlignment.Center,HorizontalAlignment=HorizontalAlignment.Center};double orbitSize=Math.Min(380,Math.Max(150,ActualHeight*(fullscreen?.30:.25)));
+  var orbit=new Grid{Width=orbitSize,Height=orbitSize,Margin=new Thickness(0,0,0,22)};
+  var mint=Color.FromRgb(104,255,228);
+  var neon=new SolidColorBrush(mint);
+  var tint=new ColorAnimationUsingKeyFrames{
+   Duration=TimeSpan.FromSeconds(6),RepeatBehavior=RepeatBehavior.Forever
+  };
+  tint.KeyFrames.Add(new LinearColorKeyFrame(mint,KeyTime.FromTimeSpan(TimeSpan.Zero)));
+  tint.KeyFrames.Add(new LinearColorKeyFrame(Color.FromRgb(95,185,255),KeyTime.FromTimeSpan(TimeSpan.FromSeconds(1.5))));
+  tint.KeyFrames.Add(new LinearColorKeyFrame(Color.FromRgb(177,129,255),KeyTime.FromTimeSpan(TimeSpan.FromSeconds(3))));
+  tint.KeyFrames.Add(new LinearColorKeyFrame(Color.FromRgb(248,148,210),KeyTime.FromTimeSpan(TimeSpan.FromSeconds(4.5))));
+  tint.KeyFrames.Add(new LinearColorKeyFrame(mint,KeyTime.FromTimeSpan(TimeSpan.FromSeconds(6))));
+  Timeline.SetDesiredFrameRate(tint,30);
+  neon.BeginAnimation(SolidColorBrush.ColorProperty,tint);
+  var rotatingRing=new Grid{RenderTransformOrigin=new Point(.5,.5),IsHitTestVisible=false};
+  var rotation=new RotateTransform();
+  rotatingRing.RenderTransform=rotation;
+  rotatingRing.Children.Add(new Border{Background=neon,OpacityMask=LaunchRibbonMask()});
+  var orbitEffects=new Grid{IsHitTestVisible=false};
+  orbitEffects.Children.Add(rotatingRing);
+  orbit.Children.Add(orbitEffects);
+  var innerRotation=new RotateTransform();
+  var innerArc=new Ellipse{
+   Margin=new Thickness(orbitSize*.20),Stroke=neon,StrokeThickness=2,Opacity=.42,
+   StrokeDashArray=new DoubleCollection{25,8,4,18,9,11},
+   RenderTransformOrigin=new Point(.5,.5),RenderTransform=innerRotation
+  };
+  orbitEffects.Children.Add(innerArc);
+  var counterSpin=new DoubleAnimation(0,-360,TimeSpan.FromSeconds(3.4)){RepeatBehavior=RepeatBehavior.Forever};
+  Timeline.SetDesiredFrameRate(counterSpin,60);
+  innerRotation.BeginAnimation(RotateTransform.AngleProperty,counterSpin);
+  var spin=new DoubleAnimation(0,360,TimeSpan.FromMilliseconds(1750)){RepeatBehavior=RepeatBehavior.Forever};
+  Timeline.SetDesiredFrameRate(spin,60);
+  rotation.BeginAnimation(RotateTransform.AngleProperty,spin);
+  var arrival=new ScaleTransform(1,1);
+  orbitEffects.RenderTransformOrigin=new Point(.5,.5);
+  orbitEffects.RenderTransform=arrival;
+  var gather=new DoubleAnimation(1.17,1,TimeSpan.FromMilliseconds(620)){
+   EasingFunction=new CubicEase{EasingMode=EasingMode.EaseOut},FillBehavior=FillBehavior.Stop
+  };
+  Timeline.SetDesiredFrameRate(gather,60);
+  arrival.BeginAnimation(ScaleTransform.ScaleXProperty,gather);
+  arrival.BeginAnimation(ScaleTransform.ScaleYProperty,gather);
+  var logo=Logo(Math.Min(108,orbitSize*.35));
+  logo.HorizontalAlignment=HorizontalAlignment.Center;
+  logo.VerticalAlignment=VerticalAlignment.Center;
+  orbit.Children.Add(logo);
+  center.Children.Add(orbit);
   var name=Txt(g.Name,30,Brushes.White);name.FontWeight=FontWeights.Bold;name.TextAlignment=TextAlignment.Center;name.MaxWidth=700;name.TextWrapping=TextWrapping.Wrap;center.Children.Add(name);var sub=Txt("正 在 启 动",12,B(Mint));sub.HorizontalAlignment=HorizontalAlignment.Center;sub.Margin=new Thickness(0,18,0,0);center.Children.Add(sub);Animate(sub,OpacityProperty,new DoubleAnimation(.35,1,TimeSpan.FromMilliseconds(500)){AutoReverse=true,RepeatBehavior=RepeatBehavior.Forever});var cancel=IconButton("back","停止等待 · Esc / B / ○（不关闭游戏）",()=>launchWaitCancelled=true);cancel.HorizontalAlignment=HorizontalAlignment.Right;cancel.VerticalAlignment=VerticalAlignment.Top;cancel.Margin=new Thickness(24);layer.Children.Add(center);
   layer.Children.Add(cancel);
   launchLayer=new Border{Child=layer,Background=B("#F50B1020")};Panel.SetZIndex(launchLayer,100);canvas.Children.Add(launchLayer);
   Animate(launchLayer,OpacityProperty,new DoubleAnimation(0,1,TimeSpan.FromMilliseconds(240)){FillBehavior=FillBehavior.Stop});
   if(HasCover(g.Cover))LoadLaunchPoster(g.Cover,launchLayer,backdrop,blurredBackdrop);
+ }
+ static ImageBrush launchRibbonMask;
+ static ImageBrush LaunchRibbonMask(){
+  if(launchRibbonMask!=null)return launchRibbonMask;
+  const int size=512;
+  var ribbons=LaunchRibbonGeometry(size);
+  var visual=new DrawingVisual();
+  using(var drawing=visual.RenderOpen()){
+   for(int i=7;i>=1;i--){
+    var ink=new SolidColorBrush(Colors.White){Opacity=.012+(7-i)*.006};
+    var pen=new Pen(ink,i*size*.024){LineJoin=PenLineJoin.Round};
+    drawing.DrawGeometry(null,pen,ribbons);
+   }
+   drawing.DrawGeometry(new SolidColorBrush(Colors.White){Opacity=.95},null,ribbons);
+   for(int i=0;i<12;i++){
+    double angle=i*Math.PI*2/12;
+    double radius=size*(.42+(i%4)*.018);
+    double dot=i%6==0?3.7:1.5;
+    var center=new Point(size*.5+Math.Cos(angle)*radius,size*.5+Math.Sin(angle)*radius);
+    drawing.DrawEllipse(new SolidColorBrush(Colors.White){Opacity=i%6==0?.82:.38},null,center,dot,dot);
+   }
+  }
+  var texture=new RenderTargetBitmap(size,size,96,96,PixelFormats.Pbgra32);
+  texture.Render(visual);
+  texture.Freeze();
+  launchRibbonMask=new ImageBrush(texture){Stretch=Stretch.Fill};
+  launchRibbonMask.Freeze();
+  return launchRibbonMask;
+ }
+ static StreamGeometry LaunchRibbonGeometry(double size){
+  var geometry=new StreamGeometry();
+  using(var context=geometry.Open()){
+   for(int arm=0;arm<3;arm++){
+    const int segments=28;
+    var outside=new Point[segments+1];
+    var inside=new Point[segments+1];
+    for(int i=0;i<=segments;i++){
+     double t=(double)i/segments;
+     double angle=arm*Math.PI*2/3+t*Math.PI*.54;
+     double radius=size*(.43-.10*t+.014*Math.Sin(t*Math.PI));
+     double halfWidth=size*(.001+.019*Math.Pow(Math.Sin(t*Math.PI),1.3));
+     double x=Math.Cos(angle),y=Math.Sin(angle),center=size*.5;
+     outside[i]=new Point(center+x*(radius+halfWidth),center+y*(radius+halfWidth));
+     inside[i]=new Point(center+x*(radius-halfWidth),center+y*(radius-halfWidth));
+    }
+    context.BeginFigure(outside[0],true,true);
+    for(int i=1;i<=segments;i++)context.LineTo(outside[i],true,true);
+    for(int i=segments;i>=0;i--)context.LineTo(inside[i],true,true);
+   }
+  }
+  geometry.Freeze();
+  return geometry;
  }
  async void LoadLaunchPoster(string path,Border owner,Image backdrop,Image blurredBackdrop){
   try{
