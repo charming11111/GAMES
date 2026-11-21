@@ -15,14 +15,13 @@ See [SDL-LICENSE.txt](SDL-LICENSE.txt) and [SDL-NOTICE.txt](SDL-NOTICE.txt).
 ## Game names, artwork and services / 游戏名称、图片和服务
 
 Game names, trademarks, store metadata and downloaded cover artwork belong to their
-respective owners. They are not relicensed under MIT. No downloaded game covers,
-game binaries, user libraries or platform account data are included in this repository.
+respective owners. They are not relicensed under MIT. Selected game covers are included as fallback presentation assets; they remain copyrighted by their respective owners. No game binaries, user libraries or platform account data are included in this repository.
 Cover requests use third-party services such as Steam and official publisher sites;
 availability and matching accuracy may change. GAMES is not affiliated with Valve,
 Epic Games, Riot Games, Sony, Microsoft or Nintendo.
 
 游戏名称、商标、商店资料及下载的封面归各自权利人所有，不按 MIT 许可证授权。
-仓库不附带下载的游戏封面、游戏本体、个人游戏库或平台账号资料。
+仓库包含少量用于显示兜底的游戏封面，其权利仍归原权利人；不附带游戏本体、个人游戏库或平台账号资料。
 本项目与上述平台或厂商没有隶属或官方合作关系。
 
 ## Project artwork / 项目美术

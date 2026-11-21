@@ -14,7 +14,7 @@ the application interface currently uses Simplified Chinese.
 Visit **[Releases](https://github.com/charming11111/GAMES/releases/latest)**:
 
 - `GAMES.exe`: a standalone executable.
-- `GAMES-v1.0.16-windows-x64.zip`: the executable, documentation and licenses.
+- `GAMES-v1.0.17-windows-x64.zip`: the executable, documentation and licenses.
 
 Requirements: **Windows 10 / 11 x64 and .NET Framework 4.8**.
 The executable is not commercially code-signed. Download from this repository's
@@ -44,7 +44,7 @@ These screenshots use a demo library and sample artwork to show the interface. N
 
 ## Features
 
-- Multiple scan locations; scan at startup or manually with **F5** / the scan button.
+- Multiple scan locations; startup and **F5** reuse installation indexes and check changes without walking every subdirectory.
 - Installation-directory detection, local Epic installation manifests, utility
   exclusions and duplicate-installation merging.
 - Online cover lookup, local cover selection, manual Steam App IDs and Chinese
@@ -53,7 +53,7 @@ These screenshots use a demo library and sample artwork to show the interface. N
   last-played and play-count sorting.
 - Dark, light and system themes; animated gradient selection borders.
 - Windowed and fullscreen modes with a saved startup preference;
-  fullscreen uses nine cards per row.
+  columns are configurable (nine by default), with fewer columns in narrow windows.
 - Xbox / PlayStation glyphs and controller navigation. Background controller
   input is ignored, and controls must return to neutral when focus returns.
 - Five synthesized sound styles with previews and separate volume presets.
