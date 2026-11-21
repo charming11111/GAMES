@@ -21,7 +21,14 @@ jobs:
         shell: powershell
         run: |
           $version = if ($env:GITHUB_REF_TYPE -eq 'tag') { $env:GITHUB_REF_NAME.TrimStart('v') } else { '1.0.17' }
-          .\package.ps1 -Version $version -Test
+          try { .\package.ps1 -Version $version -Test }
+          catch {
+            $details = @($_.Exception.Message)
+            Get-ChildItem out -Filter test-result.txt -Recurse -ErrorAction SilentlyContinue | ForEach-Object { $details += [IO.File]::ReadAllText($_.FullName) }
+            $message = ($details -join " | ").Replace('%','%25').Replace("`r",'%0D').Replace("`n",'%0A')
+            Write-Output "::error::$message"
+            throw
+          }
       - name: Upload Windows artifacts
         uses: actions/upload-artifact@v7
         with:
