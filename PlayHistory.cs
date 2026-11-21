@@ -13,6 +13,7 @@ partial class Shelf {
   public Game Game;
   public Process Process;
   public int Pid;
+  public IntPtr Window;
   public GameState State;
 
  }
@@ -30,13 +31,13 @@ partial class Shelf {
  long playSaved;
  bool playDirty;
 
- void BeginPlayTracking(Game game,IntPtr window){
+ PlaySession BeginPlayTracking(Game game,IntPtr window){
   uint pid;
   GetWindowThreadProcessId(window,out pid);
-  if(pid==0||playSessions.Any(s=>s.Pid==(int)pid&&!s.Process.HasExited))return;
+  if(pid==0||playSessions.Any(s=>s.Pid==(int)pid&&!s.Process.HasExited))return null;
   Process process;
-  try{process=Process.GetProcessById((int)pid);if(process.HasExited){process.Dispose();return;}}
-  catch(ArgumentException){return;}
+  try{process=Process.GetProcessById((int)pid);if(process.HasExited){process.Dispose();return null;}}
+  catch(ArgumentException){return null;}
   if(playSessions.Count>0)SamplePlaySessions();
   var state=State(game);
   state.LastPlayed=DateTime.UtcNow.Ticks;
@@ -45,8 +46,10 @@ partial class Shelf {
   state.PlayProcessStart=process.StartTime.ToUniversalTime().Ticks;
   state.PlaySessionBase=state.PlayTicks;
   state.PlaySessionStart=Math.Max(state.PlayProcessStart,launchRequestedTicks);
-  AttachPlaySession(game,state,process);
+  var session=AttachPlaySession(game,state,process);
+  session.Window=window;
   Save();
+  return session;
  }
 
  void RestorePlayTracking(){
@@ -68,10 +71,11 @@ partial class Shelf {
   if(playSessions.Count>0){SamplePlaySessions(true);Render();}
  }
 
- void AttachPlaySession(Game game,GameState state,Process process){
+ PlaySession AttachPlaySession(Game game,GameState state,Process process){
   // Retain a handle so Windows can report the exit time after the process is gone.
   try{var handle=process.Handle;}catch(InvalidOperationException){}catch(System.ComponentModel.Win32Exception){}
-  playSessions.Add(new PlaySession{Game=game,State=state,Process=process,Pid=process.Id});
+  var session=new PlaySession{Game=game,State=state,Process=process,Pid=process.Id};
+  playSessions.Add(session);
   if(playTimer==null){
    playTimer=new DispatcherTimer(DispatcherPriority.Background){Interval=TimeSpan.FromSeconds(1)};
    playTimer.Tick+=(o,e)=>SamplePlaySessions();
@@ -81,6 +85,7 @@ partial class Shelf {
    playSaved=0;
    playTimer.Start();
   }
+  return session;
  }
 
  void SamplePlaySessions(bool flush=false){
@@ -99,12 +104,20 @@ partial class Shelf {
    var state=session.State;
    long total=state.PlaySessionBase+Math.Max(0,until-state.PlaySessionStart);
    if(total>state.PlayTicks){state.PlayTicks=total;playDirty=true;}
-   if(!exited)continue;
+   if(!exited){
+    if(session==parkedLaunchSession&&session.Window!=IntPtr.Zero){
+     uint windowPid=0;
+     GetWindowThreadProcessId(session.Window,out windowPid);
+     SetLaunchExitStatus(windowPid!=(uint)session.Pid);
+    }
+    continue;
+   }
    state.PlayPid=0;
    state.PlayProcessStart=0;
    state.PlaySessionStart=0;
    state.PlaySessionBase=0;
    playDirty=true;
+   if(session==parkedLaunchSession)ClearLaunchScreen();
    session.Process.Dispose();
    playSessions.RemoveAt(i);
    ended=true;

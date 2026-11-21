@@ -30,5 +30,37 @@
     "",
     "剑星",
     ""
+  ],
+  "super mario bros. wonder": [
+    "wonder.exe",
+    "",
+    "",
+    "",
+    "超级马里奥兄弟：惊奇",
+    ""
+  ],
+  "new super mario bros. u": [
+    "New Super Mario Bros. U.exe",
+    "",
+    "",
+    "",
+    "新超级马里奥兄弟U",
+    ""
+  ],
+  "super mario maker 2": [
+    "portable/python/pythonw.exe",
+    "\"setup.py\" play --dump \"game\"",
+    ".",
+    "",
+    "超级马里奥制造2",
+    ""
+  ],
+  "world.apart": [
+    "game\\WorldApart.exe",
+    "",
+    "game",
+    "",
+    "不问凡尘",
+    ""
   ]
 }

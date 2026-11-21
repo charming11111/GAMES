@@ -23,6 +23,7 @@ class SmoothScrollViewer:ScrollViewer {
  void AdvanceMotion(){if(!running)return;long now=Stopwatch.GetTimestamp();double dt=(double)(now-lastTick)/Stopwatch.Frequency;lastTick=now;
   // Keep a delayed render callback from jumping the viewport forward in one frame.
   motion.Advance(Math.Min(dt,1.0/60));ScrollToVerticalOffset(motion.Position);if(motion.Settled){ScrollToVerticalOffset(motion.Target);StopMotion(false);}}
+ public void SuspendMotion(){StopMotion(false);}
  void StopMotion(bool keepVisual){if(!running)return;double position=motion.Position;running=false;wheel=false;BeginAnimation(MotionClockProperty,null);motion.Velocity=0;if(keepVisual){ScrollToVerticalOffset(position);UpdateLayout();}}
  protected override void OnPreviewMouseDown(MouseButtonEventArgs e){StopMotion(true);base.OnPreviewMouseDown(e);}
  protected override void OnPreviewMouseWheel(MouseWheelEventArgs e){if(ScrollableHeight>0&&SystemParameters.WheelScrollLines!=0){WheelBy(e.Delta);e.Handled=true;return;}base.OnPreviewMouseWheel(e);}

@@ -24,18 +24,36 @@ partial class Shelf {
  void ThreadKeyboard(ref MSG message,ref bool handled){if(handled||inputSource==null||message.hwnd!=inputSource.Handle)return;NativeKeyboard(message.hwnd,message.message,message.wParam,message.lParam,ref handled);}
  IntPtr NativeKeyboard(IntPtr hwnd,int message,IntPtr wParam,IntPtr lParam,ref bool handled){if(message==coverDiagnosticsMessage){DumpRunningCoverState();handled=true;return IntPtr.Zero;}if(message==restoreMessage){Dispatcher.BeginInvoke(new Action(BringBack));handled=true;return IntPtr.Zero;}if(message!=0x100||(!IsActive&&!testMode))return IntPtr.Zero;var key=KeyInterop.KeyFromVirtualKey(wParam.ToInt32());ModifierKeys mods=ModifierKeys.None;if((GetKeyState(0x11)&0x8000)!=0)mods|=ModifierKeys.Control;if((GetKeyState(0x10)&0x8000)!=0)mods|=ModifierKeys.Shift;
   bool repeating=(lParam.ToInt64()&(1L<<30))!=0;if((key==Key.Up||key==Key.Down)&&modal==""&&navZone=="games"){if(repeating&&(DateTime.UtcNow-lastVerticalKey).TotalMilliseconds<160){handled=true;return IntPtr.Zero;}lastVerticalKey=DateTime.UtcNow;}if(repeating&&(key==Key.F5||key==Key.F1||key==Key.F11||key==Key.Enter||key==Key.Escape)){handled=true;return IntPtr.Zero;}handled=ProcessKey(key,mods);return IntPtr.Zero;}
- bool ProcessKey(Key key,ModifierKeys mods){if(launching){if(key==Key.Escape)launchWaitCancelled=true;return key==Key.Enter||key==Key.Escape;}if(key==Key.F5){ManualScan();return true;}if(key==Key.F11){ToggleFull();if(modal=="settings")OpenSettings();return true;}if(key==Key.F1){if(modal=="settings")CloseModal();else OpenSettings();return true;}if(key==Key.Escape){Back();return true;}if(key==Key.F&&(mods&ModifierKeys.Control)!=0){CloseModal();navZone="search";ExpandSearch(true);search.Focus();RefreshNavFocus();return true;}
+ bool ProcessKey(Key key,ModifierKeys mods){if(launching||parkedLaunchSession!=null){if(key==Key.Escape)DismissLaunchScreen();return true;}if(key==Key.F5){ManualScan();return true;}if(key==Key.F11){ToggleFull();if(modal=="settings")OpenSettings();return true;}if(key==Key.F1){if(modal=="settings")CloseModal();else OpenSettings();return true;}if(key==Key.Escape){Back();return true;}if(key==Key.F&&(mods&ModifierKeys.Control)!=0){CloseModal();navZone="search";ExpandSearch(true);search.Focus();RefreshNavFocus();return true;}
   if(Keyboard.FocusedElement is TextBox){if(key==Key.Enter){if(modal=="search"){CloseModal();navZone="games";main.Focus();RefreshNavFocus();return true;}if(modal=="appid"){Confirm();return true;}navZone="games";main.Focus();RefreshNavFocus();return true;}if(key==Key.Down&&modal==""){navZone="tabs";navIndex=0;main.Focus();RefreshNavFocus();return true;}if(key!=Key.Tab)return false;}
   if(key==Key.Tab&&modal==""){string[] zones={"tools","search","tabs","games"};int index=Array.IndexOf(zones,navZone);index=(index+((mods&ModifierKeys.Shift)!=0?3:1))%4;navZone=zones[index];navIndex=0;main.Focus();RefreshNavFocus();return true;}
   if(key==Key.Enter||key==Key.Space){Confirm();return true;}int dx=key==Key.Left?-1:key==Key.Right?1:0,dy=key==Key.Up?-1:key==Key.Down?1:0;if(dx!=0||dy!=0){Navigate(dx,dy);return true;}return false;}
- int HeaderIndex(){if(navZone=="tabs")return Math.Max(0,Math.Min(tabNav.Count-1,navIndex));if(navZone=="search")return tabNav.Count;return tabNav.Count+1+Math.Max(0,Math.Min(toolNav.Count-1,navIndex));}
- void SelectHeader(int index){index=Math.Max(0,Math.Min(tabNav.Count+toolNav.Count,index));if(index<tabNav.Count){navZone="tabs";navIndex=index;}else if(index==tabNav.Count){navZone="search";navIndex=0;}else{navZone="tools";navIndex=index-tabNav.Count-1;}}
- FrameworkElement HeaderElement(int index){return index<tabNav.Count?(FrameworkElement)tabNav[index]:index==tabNav.Count?(FrameworkElement)searchBox:toolNav[index-tabNav.Count-1];}
- double NavigationCenter(FrameworkElement element){return element.TranslatePoint(new Point(element.ActualWidth/2,0),main).X;}
- int NearestHeader(int gameIndex){double x=NavigationCenter(visible[gameIndex].Card);return Enumerable.Range(0,tabNav.Count+toolNav.Count+1).OrderBy(i=>Math.Abs(NavigationCenter(HeaderElement(i))-x)).First();}
+ int HeaderIndex(){
+  if(navZone=="search")return toolNav.Count+tabNav.Count;
+  if(navZone=="tabs")return toolNav.Count+tabNav.Count-1-navIndex;
+  return toolNav.Count-1-navIndex;
+ }
+ void SelectHeader(int index){
+  index=Math.Max(0,Math.Min(toolNav.Count+tabNav.Count,index));
+  if(index<toolNav.Count){navZone="tools";navIndex=toolNav.Count-1-index;}
+  else if(index<toolNav.Count+tabNav.Count){navZone="tabs";navIndex=toolNav.Count+tabNav.Count-1-index;}
+  else{navZone="search";navIndex=0;}
+ }
  void Navigate(int dx,int dy){LockPointer();PlayUi("move");if(!main.IsKeyboardFocused)main.Focus();if(modal!=""){if(modal=="search")MoveModal(dy!=0?dy*10:dx);else MoveModal(dy!=0?dy:dx);return;}controllerNavigation=true;
-  if(navZone=="games"){if(visible.Count==0)SelectHeader(0);else if(dy<0&&selected<columns)SelectHeader(NearestHeader(selected));else{int rowStart=(selected/columns)*columns,rowEnd=Math.Min(rowStart+columns-1,visible.Count-1);if(dx!=0)selected=Math.Max(rowStart,Math.Min(rowEnd,selected+dx));else if(dy>0)selected=Math.Min(visible.Count-1,selected+columns);else selected=Math.Max(0,selected-columns);RevealSelected();}}
-  else{if(dx!=0)SelectHeader(HeaderIndex()+dx);if(dy>0&&visible.Count>0){double x=NavigationCenter(HeaderElement(HeaderIndex()));selected=Enumerable.Range(0,Math.Min(columns,visible.Count)).OrderBy(i=>Math.Abs(NavigationCenter(visible[i].Card)-x)).First();navZone="games";RevealSelected();}}
+  if(navZone=="games"){
+   if(visible.Count==0)SelectHeader(0);
+   else{
+    int rowStart=(selected/columns)*columns,rowEnd=Math.Min(rowStart+columns-1,visible.Count-1);
+    if(dx<0&&selected==rowStart)SelectHeader(0);
+    else{
+     if(dx!=0)selected=Math.Max(rowStart,Math.Min(rowEnd,selected+dx));
+     else if(dy>0)selected=Math.Min(visible.Count-1,selected+columns);
+     else if(selected>=columns)selected-=columns;
+     RevealSelected();
+    }
+   }
+  }else if(dx>0&&visible.Count>0){navZone="games";RevealSelected();}
+  else if(dy!=0)SelectHeader(HeaderIndex()+dy);
   RefreshNavFocus();DrawHints();}
  int NearestTab(int col){if(columns<=1)return 0;double x=(double)col/(columns-1);if(x>.83)return tabNav.Count-1;if(x>.65)return tabNav.Count-2;return Math.Min(2,(int)Math.Round(x*4));}
  void RefreshNavFocus(){string style=navZone+"|"+navIndex+"|"+modal;if(focusStyleKey==style){Highlight(false);return;}focusStyleKey=style;if(navButton!=null){navButton.Effect=null;PaintIcon(navButton);}navButton=null;if(searchBox!=null){searchBox.BorderThickness=new Thickness(1);searchBox.SetResourceReference(Border.BorderBrushProperty,"Line");searchBox.Effect=null;}

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Controls.Primitives;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Media.Animation;
@@ -48,13 +49,48 @@ partial class Shelf {
  Button IconButton(string icon,string tip,Action action,double size=42){var b=new Button{Width=size,Height=size,Content=Glyph(icon,19),ToolTip=tip,Margin=new Thickness(4,0,4,0),Cursor=Cursors.Hand,HorizontalContentAlignment=HorizontalAlignment.Center};b.Resources["ActionIcon"]=icon;b.Template=ColorButtonTemplate();b.MouseEnter+=(o,e)=>PaintIcon(b);b.MouseLeave+=(o,e)=>PaintIcon(b,navButton==b&&modal=="");PaintIcon(b);ToolTipService.SetInitialShowDelay(b,300);b.MouseMove+=(o,e)=>{if(modal==""&&!controllerNavigation){if(toolNav.Contains(b)&&(navZone!="tools"||navIndex!=toolNav.IndexOf(b))){navZone="tools";navIndex=toolNav.IndexOf(b);RefreshNavFocus();}else if(tabNav.Contains(b)&&(navZone!="tabs"||navIndex!=tabNav.IndexOf(b))){navZone="tabs";navIndex=tabNav.IndexOf(b);RefreshNavFocus();}}};b.Click+=(o,e)=>{PlayUi("confirm");action();};System.Windows.Automation.AutomationProperties.SetName(b,tip);return b;}
  static Viewbox Logo(double size){var grid=new Grid{Width=64,Height=64};grid.Children.Add(new Border{CornerRadius=new CornerRadius(17),Background=new LinearGradientBrush((Color)ColorConverter.ConvertFromString("#A18AFF"),(Color)ColorConverter.ConvertFromString("#5137C1"),60)});grid.Children.Add(new Border{Width=27,Height=31,CornerRadius=new CornerRadius(5),Background=B("#927FDE"),BorderBrush=B("#BFB3FF"),BorderThickness=new Thickness(1.5),Margin=new Thickness(0,-12,0,0),RenderTransformOrigin=new Point(.5,.5),RenderTransform=new RotateTransform(-16)});grid.Children.Add(new Border{Width=27,Height=31,CornerRadius=new CornerRadius(5),Background=B("#ECE8FF"),Margin=new Thickness(7,-8,0,0),RenderTransformOrigin=new Point(.5,.5),RenderTransform=new RotateTransform(9)});var controller=new System.Windows.Shapes.Path{Data=Geometry.Parse("M17,29 Q18,25 24,25 H41 Q46,25 48,31 L53,45 Q55,54 48,53 L41,47 H24 L18,53 Q10,55 12,46 Z"),Fill=B("#1B2340"),Stroke=B("#71E3CB"),StrokeThickness=2.2};grid.Children.Add(controller);grid.Children.Add(new System.Windows.Shapes.Path{Data=Geometry.Parse("M23,33 V43 M18,38 H28"),Stroke=B("#F7F5FF"),StrokeThickness=2.5,StrokeStartLineCap=PenLineCap.Round,StrokeEndLineCap=PenLineCap.Round});foreach(var point in new[]{new Point(42,34),new Point(46,40)})grid.Children.Add(new Ellipse{Width=4,Height=4,Fill=B(Mint),HorizontalAlignment=HorizontalAlignment.Left,VerticalAlignment=VerticalAlignment.Top,Margin=new Thickness(point.X-2,point.Y-2,0,0)});return new Viewbox{Width=size,Height=size,Child=grid};}
  static void MakeIcon(string output){var images=new List<byte[]>();var sizes=new[]{16,24,32,48,64,128,256};foreach(int n in sizes){var logo=Logo(n);logo.Measure(new Size(n,n));logo.Arrange(new Rect(0,0,n,n));var bitmap=new RenderTargetBitmap(n,n,96,96,PixelFormats.Pbgra32);bitmap.Render(logo);var enc=new PngBitmapEncoder();enc.Frames.Add(BitmapFrame.Create(bitmap));using(var ms=new MemoryStream()){enc.Save(ms);images.Add(ms.ToArray());if(n==256)File.WriteAllBytes(System.IO.Path.ChangeExtension(output,"png"),ms.ToArray());}}using(var f=new BinaryWriter(File.Create(output))){f.Write((ushort)0);f.Write((ushort)1);f.Write((ushort)sizes.Length);int offset=6+16*sizes.Length;for(int i=0;i<sizes.Length;i++){f.Write((byte)(sizes[i]==256?0:sizes[i]));f.Write((byte)(sizes[i]==256?0:sizes[i]));f.Write((byte)0);f.Write((byte)0);f.Write((ushort)1);f.Write((ushort)32);f.Write(images[i].Length);f.Write(offset);offset+=images[i].Length;}foreach(var image in images)f.Write(image);}}
+ void InstallGameScrollBar(){
+  const string template=@"<ControlTemplate xmlns='http://schemas.microsoft.com/winfx/2006/xaml/presentation'
+    xmlns:x='http://schemas.microsoft.com/winfx/2006/xaml' TargetType='ScrollViewer'>
+   <Grid ClipToBounds='True'>
+    <ScrollContentPresenter x:Name='PART_ScrollContentPresenter' Margin='{TemplateBinding Padding}'/>
+    <ScrollBar x:Name='PART_VerticalScrollBar' Orientation='Vertical'
+      HorizontalAlignment='Right' Margin='0,2,2,2' Width='10' Visibility='{TemplateBinding ComputedVerticalScrollBarVisibility}'
+      Maximum='{TemplateBinding ScrollableHeight}' ViewportSize='{TemplateBinding ViewportHeight}'
+      Value='{Binding VerticalOffset, RelativeSource={RelativeSource TemplatedParent}, Mode=OneWay}'
+      Opacity='0' IsHitTestVisible='False'/>
+   </Grid>
+  </ControlTemplate>";
+  scroll.Template=(ControlTemplate)System.Windows.Markup.XamlReader.Parse(template);
+  var hide=new System.Windows.Threading.DispatcherTimer{Interval=TimeSpan.FromSeconds(3)};
+  ScrollBar bar=null;
+  Action conceal=()=>{
+   hide.Stop();
+   if(bar==null)return;
+   bar.Opacity=0;
+   bar.IsHitTestVisible=false;
+  };
+  hide.Tick+=(o,e)=>{if(bar==null||!bar.IsMouseCaptureWithin)conceal();};
+  scroll.ScrollChanged+=(o,e)=>{
+   if(e.OriginalSource!=scroll)return;
+   if(scroll.ScrollableHeight<=0){conceal();return;}
+   if(e.VerticalChange==0)return;
+   bar=(ScrollBar)scroll.Template.FindName("PART_VerticalScrollBar",scroll);
+   if(bar==null)return;
+   bar.Opacity=.55;
+   bar.IsHitTestVisible=true;
+   hide.Stop();
+   hide.Start();
+  };
+  scroll.Unloaded+=(o,e)=>conceal();
+ }
  void BuildUI(){Content=canvas;main.Margin=new Thickness(32,20,32,14);canvas.Children.Add(main);for(int i=0;i<5;i++)main.RowDefinitions.Add(new RowDefinition{Height=i==3?new GridLength(1,GridUnitType.Star):GridLength.Auto});
-  var header=new Grid{Margin=new Thickness(0,0,0,24)};header.ColumnDefinitions.Add(new ColumnDefinition());header.ColumnDefinitions.Add(new ColumnDefinition{Width=GridLength.Auto});header.Background=Brushes.Transparent;var brand=new StackPanel{Orientation=Orientation.Horizontal};var logo=Logo(40);logo.Margin=new Thickness(0,0,13,0);brand.Children.Add(logo);var word=new StackPanel{VerticalAlignment=VerticalAlignment.Center};var title=Label("G A M E S",25,"Fg");title.FontFamily=new FontFamily("Bahnschrift SemiBold, Segoe UI Variable Display, Segoe UI");title.FontWeight=FontWeights.SemiBold;word.Children.Add(title);var sub=Label("Y O U R   P L A Y   U N I V E R S E",7,"Muted");sub.Margin=new Thickness(0,3,0,0);word.Children.Add(sub);brand.Children.Add(word);header.Children.Add(brand);header.MouseLeftButtonDown+=(o,e)=>{if(e.OriginalSource==header&&!fullscreen){if(e.ClickCount==2)WindowState=WindowState==WindowState.Maximized?WindowState.Normal:WindowState.Maximized;else DragMove();}};brand.MouseLeftButtonDown+=(o,e)=>{if(!fullscreen)DragMove();};
-  var tools=new StackPanel{Orientation=Orientation.Horizontal,VerticalAlignment=VerticalAlignment.Center};toolNav.Add(IconButton("scan","扫描游戏 · F5",ManualScan));toolNav.Add(IconButton("refresh","补充缺失封面",RetryAll));fullButton=IconButton("full","全屏 / 窗口 · F11",ToggleFull);toolNav.Add(fullButton);toolNav.Add(IconButton("settings","设置 · F1 / Options / Menu",OpenSettings));toolNav.Add(IconButton("minus","最小化到托盘",MinimizeToTray));toolNav.Add(IconButton("power","退出 GAMES · L2 + R2 / LT + RT",OpenExitConfirmation));foreach(var b in toolNav)tools.Children.Add(b);Grid.SetColumn(tools,1);header.Children.Add(tools);main.Children.Add(header);
+  var header=new Grid{Margin=new Thickness(0,0,0,24)};header.ColumnDefinitions.Add(new ColumnDefinition());header.ColumnDefinitions.Add(new ColumnDefinition{Width=GridLength.Auto});header.Background=Brushes.Transparent;var brand=new StackPanel{Orientation=Orientation.Horizontal};var logo=Logo(40);logo.Margin=new Thickness(0,0,13,0);brand.Children.Add(logo);var word=new StackPanel{VerticalAlignment=VerticalAlignment.Center};var title=Label("G A M E S",25,"Fg");title.FontFamily=new FontFamily("Bahnschrift SemiBold, Segoe UI Variable Display, Segoe UI");title.FontWeight=FontWeights.SemiBold;word.Children.Add(title);var sub=Label("Y O U R   P L A Y   U N I V E R S E",7,"Muted");sub.Margin=new Thickness(0,3,0,0);word.Children.Add(sub);brand.Children.Add(word);header.Children.Add(brand);
+  var tools=new StackPanel{Orientation=Orientation.Horizontal,VerticalAlignment=VerticalAlignment.Center};toolNav.Add(IconButton("scan","检查游戏变化 · F5",ManualScan));toolNav.Add(IconButton("refresh","补充缺失封面",RetryAll));fullButton=IconButton("full","全屏 / 窗口 · F11 / Create / Share / View",ToggleFull);toolNav.Add(fullButton);toolNav.Add(IconButton("settings","设置 · F1 / Options / Menu",OpenSettings));toolNav.Add(IconButton("minus","最小化到托盘",MinimizeToTray));toolNav.Add(IconButton("power","退出 GAMES · L2 + R2 / LT + RT",OpenExitConfirmation));foreach(var b in toolNav)tools.Children.Add(b);Grid.SetColumn(tools,1);header.Children.Add(tools);main.Children.Add(header);
   var intro=new Grid{Margin=new Thickness(0,0,0,20)};intro.ColumnDefinitions.Add(new ColumnDefinition());intro.ColumnDefinitions.Add(new ColumnDefinition{Width=GridLength.Auto});var heading=new StackPanel();var line=new StackPanel{Orientation=Orientation.Horizontal};section=Label("游戏库",28,"Fg");section.FontWeight=FontWeights.Bold;line.Children.Add(section);countText=Label("",12,"Muted");countText.Margin=new Thickness(14,8,0,0);line.Children.Add(countText);heading.Children.Add(line);heading.Children.Add(Label("属于你的世界，随时出发。",12,"Muted"));intro.Children.Add(heading);
   var input=new Grid{Width=250};var sg=Glyph("search",16);sg.HorizontalAlignment=HorizontalAlignment.Left;sg.Margin=new Thickness(14,0,0,0);sg.IsHitTestVisible=false;search.FontSize=13;search.Padding=new Thickness(40,12,14,12);search.Background=Brushes.Transparent;search.SetResourceReference(Control.ForegroundProperty,"Fg");search.SetResourceReference(TextBox.CaretBrushProperty,"Fg");search.ToolTip="搜索中英文游戏名 · Ctrl+F";search.TextChanged+=(o,e)=>{if(searchHint!=null)searchHint.Visibility=search.Text.Length==0?Visibility.Visible:Visibility.Collapsed;selected=0;Render();};input.Children.Add(search);input.Children.Add(sg);searchHint=Label("搜索游戏",13,"Muted");searchHint.Margin=new Thickness(40,0,0,0);searchHint.IsHitTestVisible=false;input.Children.Add(searchHint);var sb=Box(input,"Surface",13);searchBox=sb;sb.VerticalAlignment=VerticalAlignment.Center;Grid.SetColumn(sb,1);intro.Children.Add(sb);Grid.SetRow(intro,1);main.Children.Add(intro);
   var nav=new Grid{Margin=new Thickness(0,0,0,18)};nav.ColumnDefinitions.Add(new ColumnDefinition());nav.ColumnDefinitions.Add(new ColumnDefinition{Width=GridLength.Auto});filterButtons=new StackPanel{Orientation=Orientation.Horizontal};foreach(var entry in new[]{new[]{"all","grid","全部游戏"},new[]{"favorite","heart","收藏"},new[]{"recent","clock","最近游玩"}}){string f=entry[0];var b=IconButton(entry[1],entry[2],()=>{PlayUi("switch");filter=f;selected=0;Render();});b.Tag=f;filterButtons.Children.Add(b);tabNav.Add(b);}nav.Children.Add(filterButtons);var right=new StackPanel{Orientation=Orientation.Horizontal};var filterButton=IconButton("filter","筛选 · X / □",OpenFilters);var sortButton=IconButton("sort","排序",OpenSort);right.Children.Add(filterButton);right.Children.Add(sortButton);tabNav.Add(filterButton);tabNav.Add(sortButton);Grid.SetColumn(right,1);nav.Children.Add(right);Grid.SetRow(nav,2);main.Children.Add(nav);
-  scroll.WheelStarted+=(o,e)=>LockPointer();scroll.Content=tiles;scroll.VerticalScrollBarVisibility=ScrollBarVisibility.Auto;scroll.HorizontalScrollBarVisibility=ScrollBarVisibility.Disabled;scroll.Padding=new Thickness(8,16,8,16);scroll.PanningMode=PanningMode.VerticalOnly;Grid.SetRow(scroll,3);main.Children.Add(scroll);scroll.SizeChanged+=(o,e)=>UpdateTileSizes();
+  scroll.WheelStarted+=(o,e)=>LockPointer();scroll.Content=tiles;InstallGameScrollBar();scroll.VerticalScrollBarVisibility=ScrollBarVisibility.Auto;scroll.HorizontalScrollBarVisibility=ScrollBarVisibility.Disabled;scroll.Padding=new Thickness(8,16,8,16);scroll.PanningMode=PanningMode.VerticalOnly;Grid.SetRow(scroll,3);main.Children.Add(scroll);scroll.SizeChanged+=(o,e)=>UpdateTileSizes();
   var footer=new Grid{Margin=new Thickness(0,14,0,0)};footer.ColumnDefinitions.Add(new ColumnDefinition());footer.ColumnDefinitions.Add(new ColumnDefinition{Width=GridLength.Auto});var info=new StackPanel();selectedName=Label("",12,"Fg");selectedName.TextTrimming=TextTrimming.CharacterEllipsis;info.Children.Add(selectedName);status=Label("自动同步已开启",10,"Muted");status.Margin=new Thickness(0,4,0,0);status.TextTrimming=TextTrimming.CharacterEllipsis;info.Children.Add(status);footer.Children.Add(info);hintBar.HorizontalAlignment=HorizontalAlignment.Right;hintBar.VerticalAlignment=VerticalAlignment.Center;Grid.SetColumn(hintBar,1);footer.Children.Add(hintBar);Grid.SetRow(footer,4);main.Children.Add(footer);DrawHints();
   overlay.Visibility=Visibility.Collapsed;overlay.Background=B("#B5080B14");Panel.SetZIndex(overlay,50);canvas.Children.Add(overlay);overlay.MouseLeftButtonDown+=(o,e)=>{if(e.OriginalSource==overlay&&!launching)CloseModal();};}
  void BuildCard(Game g){string key=CardFingerprint(g);if(g.Host!=null&&g.CardKey==key){tiles.Children.Add(g.Host);return;}var art=new Grid{ClipToBounds=true,Background=new LinearGradientBrush((Color)ColorConverter.ConvertFromString("#333153"),(Color)ColorConverter.ConvertFromString("#192638"),45)};var place=new StackPanel{VerticalAlignment=VerticalAlignment.Center,HorizontalAlignment=HorizontalAlignment.Center};place.Children.Add(Glyph("pad",46));var name=Txt(g.Name,13,B("#A9AFCA"));name.TextWrapping=TextWrapping.Wrap;name.TextAlignment=TextAlignment.Center;name.MaxWidth=140;name.Margin=new Thickness(10,18,10,0);place.Children.Add(name);art.Children.Add(place);g.Image=new Image{Stretch=Stretch.UniformToFill};g.CoverPlaceholder=place;g.BackdropImage=null;
@@ -197,6 +233,73 @@ partial class Shelf {
   System.Windows.Automation.AutomationProperties.SetName(badge,"新游戏");
   return badge;
  }
+ TextBlock launchStatus;
+ StackPanel launchDots;
+ System.Windows.Threading.DispatcherTimer launchDotsTimer;
+ int launchDotStep;
+
+ void ShowLaunchDots(int count){
+  for(int i=0;i<launchDots.Children.Count;i++)
+   launchDots.Children[i].Opacity=i<count?1:0;
+ }
+
+ void AnimateLaunchDots(bool active){
+  if(launchDots==null)return;
+  launchDots.Visibility=active?Visibility.Visible:Visibility.Collapsed;
+  if(!active){if(launchDotsTimer!=null)launchDotsTimer.Stop();return;}
+  if(launchDotsTimer==null){
+   launchDotsTimer=new System.Windows.Threading.DispatcherTimer{Interval=TimeSpan.FromMilliseconds(250)};
+   launchDotsTimer.Tick+=(o,e)=>{
+    launchDotStep=(launchDotStep+1)%6;
+    ShowLaunchDots(Math.Min(launchDotStep,6-launchDotStep));
+   };
+  }
+  launchDotStep=0;
+  ShowLaunchDots(0);
+  launchDotsTimer.Start();
+ }
+
+ Action stopLaunchAnimation;
+ PlaySession parkedLaunchSession;
+
+ void HoldLaunchScreen(PlaySession session){
+  stopLaunchAnimation();
+  stopLaunchAnimation=null;
+  parkedLaunchSession=session;
+  StopGlow();
+  scroll.SuspendMotion();
+  main.Visibility=Visibility.Hidden;
+ }
+
+ void DismissLaunchScreen(){
+  if(parkedLaunchSession==null){launchWaitCancelled=true;return;}
+  string keep=parkedLaunchSession.Game.Path;
+  ClearLaunchScreen();
+  Render(keep);
+  main.Focus();
+ }
+
+ void SetLaunchExitStatus(bool exiting){
+  string text=exiting?"正 在 退 出":"游 玩 中";
+  if(launchStatus==null||launchStatus.Text==text)return;
+  launchStatus.Text=text;
+  launchStatus.FontSize=exiting?28:20;
+  AnimateLaunchDots(exiting);
+ }
+
+ void ClearLaunchScreen(){
+  if(stopLaunchAnimation!=null){stopLaunchAnimation();stopLaunchAnimation=null;}
+  if(launchLayer!=null)canvas.Children.Remove(launchLayer);
+  launchLayer=null;
+  AnimateLaunchDots(false);
+  launchStatus=null;
+  launchDots=null;
+  if(parkedLaunchSession!=null){
+   parkedLaunchSession=null;
+   main.Visibility=Visibility.Visible;
+  }
+ }
+
  void ShowLaunch(Game g){
   var layer=new Grid{ClipToBounds=true};
   var backdrop=new Image{Source=g.Image==null?null:g.Image.Source,Stretch=Stretch.Uniform,HorizontalAlignment=HorizontalAlignment.Center,IsHitTestVisible=false};
@@ -272,10 +375,41 @@ partial class Shelf {
   logo.VerticalAlignment=VerticalAlignment.Center;
   orbit.Children.Add(logo);
   center.Children.Add(orbit);
-  var name=Txt(g.Name,30,Brushes.White);name.FontWeight=FontWeights.Bold;name.TextAlignment=TextAlignment.Center;name.MaxWidth=700;name.TextWrapping=TextWrapping.Wrap;center.Children.Add(name);var sub=Txt("正 在 启 动",12,B(Mint));sub.HorizontalAlignment=HorizontalAlignment.Center;sub.Margin=new Thickness(0,18,0,0);center.Children.Add(sub);Animate(sub,OpacityProperty,new DoubleAnimation(.35,1,TimeSpan.FromMilliseconds(500)){AutoReverse=true,RepeatBehavior=RepeatBehavior.Forever});var cancel=IconButton("back","停止等待 · Esc / B / ○（不关闭游戏）",()=>launchWaitCancelled=true);cancel.HorizontalAlignment=HorizontalAlignment.Right;cancel.VerticalAlignment=VerticalAlignment.Top;cancel.Margin=new Thickness(24);layer.Children.Add(center);
+  var name=Txt(g.Name,30,Brushes.White);name.FontWeight=FontWeights.Bold;name.TextAlignment=TextAlignment.Center;name.MaxWidth=700;name.TextWrapping=TextWrapping.Wrap;center.Children.Add(name);var sub=Txt("正 在 启 动",28,B(Mint));
+  launchStatus=sub;
+  sub.FontWeight=FontWeights.SemiBold;
+  var statusRow=new StackPanel{Orientation=Orientation.Horizontal,HorizontalAlignment=HorizontalAlignment.Center,Margin=new Thickness(0,18,0,0)};
+  statusRow.Children.Add(sub);
+  launchDots=new StackPanel{
+   Orientation=Orientation.Horizontal,
+   VerticalAlignment=VerticalAlignment.Center,
+   Margin=new Thickness(8,0,0,0)
+  };
+  var dotBrush=B(Mint);
+  for(int i=0;i<3;i++)
+   launchDots.Children.Add(new Ellipse{Width=7,Height=7,Fill=dotBrush,Margin=new Thickness(0,0,5,0)});
+  statusRow.Children.Add(launchDots);
+  center.Children.Add(statusRow);
+  AnimateLaunchDots(true);
+  var cancel=IconButton("back","停止等待 · Esc / B / ○（不关闭游戏）",DismissLaunchScreen);cancel.HorizontalAlignment=HorizontalAlignment.Right;cancel.VerticalAlignment=VerticalAlignment.Top;cancel.Margin=new Thickness(24);layer.Children.Add(center);
   layer.Children.Add(cancel);
   launchLayer=new Border{Child=layer,Background=B("#F50B1020")};Panel.SetZIndex(launchLayer,100);canvas.Children.Add(launchLayer);
   Animate(launchLayer,OpacityProperty,new DoubleAnimation(0,1,TimeSpan.FromMilliseconds(240)){FillBehavior=FillBehavior.Stop});
+  stopLaunchAnimation=()=>{
+   Color color=neon.Color;
+   neon.BeginAnimation(SolidColorBrush.ColorProperty,null);
+   neon.Color=color;
+   double angle=rotation.Angle, innerAngle=innerRotation.Angle;
+   rotation.BeginAnimation(RotateTransform.AngleProperty,null);
+   innerRotation.BeginAnimation(RotateTransform.AngleProperty,null);
+   rotation.Angle=angle;
+   innerRotation.Angle=innerAngle;
+   arrival.BeginAnimation(ScaleTransform.ScaleXProperty,null);
+   arrival.BeginAnimation(ScaleTransform.ScaleYProperty,null);
+   SetLaunchExitStatus(false);
+   cancel.ToolTip="返回游戏库 · Esc / B / ○（不关闭游戏）";
+   launchLayer.BeginAnimation(OpacityProperty,null);
+  };
   if(HasCover(g.Cover))LoadLaunchPoster(g.Cover,launchLayer,backdrop,blurredBackdrop);
  }
  static ImageBrush launchRibbonMask;
